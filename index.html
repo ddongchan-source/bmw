@@ -131,6 +131,10 @@ button.card:active,.qa:active,.btn:active,.row:active{transform:scale(.98)}
 .ph{background:var(--bg-subtle);border:1.2px dashed var(--border-strong);border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-3);font-size:12px;overflow:hidden;position:relative}
 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph.has{border:0;background:none}
+.ph.has.fit-glasses img,.ph.has.fit-glassesSmall img{object-fit:contain}
+.ph.has.fit-hero img{object-fit:cover;object-position:center top}
+.replay .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;transition:opacity .4s}
+.replay.playing .bg{opacity:.18}
 
 /* ---------- Home ---------- */
 .hero{height:440px;border-radius:0;border-left:0;border-right:0;border-top:0;margin:0 -24px}
@@ -230,6 +234,20 @@ button.card:active,.qa:active,.btn:active,.row:active{transform:scale(.98)}
 .arview.noimg .schem{display:block}
 .arview .arhint{position:absolute;right:12px;bottom:10px;z-index:3;font-size:11px;color:#fff;background:rgba(11,11,13,.55);padding:4px 10px;border-radius:999px;pointer-events:none}
 .arview .modetag{position:absolute;left:22px;top:10px;z-index:3;font:600 11px var(--font-en);letter-spacing:.1em;color:#fff;background:rgba(11,11,13,.55);padding:4px 10px;border-radius:999px;pointer-events:none}
+.arview .hs{position:absolute;z-index:2;border-radius:6px;border:1.5px solid transparent;background:transparent;padding:0;opacity:1;color:#fff;font:600 9px var(--font-en);letter-spacing:.08em;display:flex;align-items:center;justify-content:center;transition:all .25s}
+.arview .hs.zone.on,.arview .hs.on{border:1.5px solid transparent;background:transparent;opacity:1}
+.arview .hs:hover{border-color:rgba(129,196,255,.8)}
+.arview .hs.zone.offz{opacity:1;border:1.5px dashed rgba(255,255,255,.75);background:rgba(11,11,13,.35)}
+.arview .hs.zone.offz::after{content:'OFF';background:rgba(11,11,13,.7);padding:2px 6px;border-radius:999px}
+.arview .hs.on::after{content:''}
+.arview .hs.tap{animation:hsTap .5s}
+@keyframes hsTap{40%{border-color:#81C4FF;background:rgba(129,196,255,.25)}}
+.arview.noimg .hs{display:none}
+.arview .fullbtn{position:absolute;right:10px;bottom:10px;z-index:4;height:28px;padding:0 12px;border-radius:999px;background:rgba(11,11,13,.6);color:#fff;font-size:11px;display:flex;align-items:center;gap:6px}
+.arwrap{margin:18px -24px 0}
+.arwrap .arview{margin:0}
+.zsum{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.zsum b{font:500 13px var(--font-kr)}
 .armodal{position:absolute;inset:0;z-index:80;background:#0B0B0D;display:none;align-items:center;justify-content:center}
 .armodal.show{display:flex}
 .armodal .rot{transform:rotate(90deg);display:flex;flex-direction:column;gap:12px}
@@ -263,11 +281,12 @@ button.card:active,.qa:active,.btn:active,.row:active{transform:scale(.98)}
    IMAGE SLOTS — 이미지 경로를 넣으면 플레이스홀더 대신 표시됩니다.
    ========================================================= */
 const IMAGES = {
-  hero: '',          // 차량 히어로 (M4 Competition 정면)
-  glasses: '',       // AR 글라스 제품 이미지
-  glassesSmall: '',  // XREAL M 허브 상단 글라스
-  track: '',         // 영종도 트랙맵 / 서킷 이미지
-  simRoom: '',       // 시뮬레이터 룸 이미지
+  hero: 'img/hero.png',                 // 차량 히어로 (M4 Competition 정면, 투명 배경)
+  glasses: 'img/glasses.png',           // AR 글라스 제품 이미지
+  glassesSmall: 'img/glasses.png',      // XREAL M 허브 상단 글라스
+  track: 'img/racing.png',              // 라운드 상세 상단 (레이스 이미지)
+  simRoom: 'img/driving-center.png',    // 시뮬레이터 예약 상단
+  replay: 'img/pit-replay.png',         // 세션 리포트 · 피트 리플레이 배경
 };
 
 /* =========================================================
@@ -289,9 +308,15 @@ const AR_LAYERS = {
   Dp:'Dp.png',           // 차량 상태
   E:'E.png',             // 안전 알림 (항상 켜짐)
   F:'F.png',             // 노면 가이드 / 교차로 화살표 / 이상적 라인
-  GH:'GH.png'            // 좌우 측면 창
+  GH:'GH.png',           // 좌우 측면 창
+  thumb_shift:'thumb_shift.jpg', thumb_dial:'thumb_dial.jpg' // 핸들 위 표시 선택 카드 미리보기
 };
 const AR_ORDER = ['F','GH','B','C','D','Dp','E','A_shift','A_dial'];
+// 각 UI가 운전자 뷰 이미지에서 차지하는 영역 (%, 1672×941 기준)
+const HOTSPOTS = {
+  B:[0.8,11.4,22.7,9.9], C:[0.8,21.3,22.7,20.5], E:[34,6,33.1,7.2], D:[80.6,6.7,16.5,14.9], Dp:[80.6,21.6,16.5,5.2],
+  A:[42.2,51.9,19.7,9.2], F:[50,29.4,25.8,23.3], GH:[0,59.5,19.7,14.9]
+};
 const arSrc = (mode,k) => `${AR_DIR}/${MODE_DIR[mode]}/${AR_LAYERS[k]}`;
 
 /* =========================================================
@@ -379,7 +404,7 @@ const DAYS=['일','월','화','수','목','금','토'];
    ========================================================= */
 const josa=(w,a,b)=>{const c=w.trim().slice(-1).charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3)return (c-0xAC00)%28?a:b;return /[0-9lmnLMN]$/.test(w.trim())?a:b;};
 const fmtLens=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
-const img=(key,label,cls='',style='')=>IMAGES[key]?`<div class="ph has ${cls}" style="${style}"><img src="${IMAGES[key]}" alt="${label}"></div>`:`<div class="ph ${cls}" style="${style}">${ic('img',28,1.3)}<span>${label}</span></div>`;
+const img=(key,label,cls='',style='')=>IMAGES[key]?`<div class="ph has fit-${key} ${cls}" style="${style}"><img src="${IMAGES[key]}" alt="${label}"></div>`:`<div class="ph ${cls}" style="${style}">${ic('img',28,1.3)}<span>${label}</span></div>`;
 const header=(t,back=true)=>`<div class="header">${back?`<button class="backbtn" data-a="back" aria-label="뒤로">${ic('chevL',22)}</button>`:''}<h1>${t}</h1></div>`;
 function tabbar(active){
   const tabs=[['map','지도',null],['globe','탐색',null],['car','차량','A'],['xm','XREAL M','C'],['user','프로필',null]];
@@ -403,16 +428,19 @@ const slotGrid=(arr,sel,a)=>`<div class="slots">${arr.map(([t,st])=>`<button cla
 function layerVisible(k){if(k==='A_shift')return S.cluster==='shift';if(k==='A_dial')return S.cluster==='dial';if(k==='E')return true;return !!S.zones[k];}
 function arView(mode,z,big){
   const layers=AR_ORDER.map(k=>`<img class="layer layer-${k} ${layerVisible(k)?'':'hide'}" src="${arSrc(mode,k)}" alt="" onerror="this.remove()">`).join('');
-  return `<div class="ar-panel arview" ${big?'data-a="arClose"':'data-a="arFull"'}>
+  const hs=Object.entries(HOTSPOTS).map(([k,[x,y,w,h]])=>k==='A'||k==='E'
+    ?`<button class="hs on" data-a="lockedZone" data-p="${k==='A'?'A · 속도 · 기어':'E · 안전 알림'}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%" aria-label="${k}"></button>`
+    :`<button class="zone hs ${S.zones[k]?'on':'offz'}" data-a="zone" data-p="${k}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%" aria-label="${k}"></button>`).join('');
+  return `<div class="ar-panel arview">
     <img class="base" src="${arSrc(mode,'base')}" alt="${mode} 운전자 뷰" onerror="this.closest('.arview').classList.add('noimg')">
-    ${layers}
+    ${layers}${hs}
     <div class="schem">
     <svg width="100%" height="224" viewBox="0 0 345 224" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" style="position:absolute;inset:0"><path d="M58 22 L287 22 L316 150 L29 150 Z"/><path d="M12 44 L50 26 L24 150 L8 150 Z"/><path d="M333 44 L295 26 L321 150 L337 150 Z"/><path d="M172 64 L118 150 M172 64 L226 150" stroke-opacity=".15"/><path d="M104 224 A70 70 0 0 1 240 224" stroke-width="8" stroke-opacity=".5"/></svg>
     ${z('B','B',66,28,46,16)}${z('C','C',64,48,46,52)}${z('D','D',236,28,46,16)}${z('Dp',"D'",238,48,40,26)}${z('F','F',150,96,46,22)}${z('GH','G',14,62,22,44)}${z('GH','H',309,62,22,44)}
     <button class="zone lock" data-a="lockedZone" data-p="E · 안전 알림" style="left:132px;top:28px;width:82px;height:14px">E</button>
     <button class="zone lock" data-a="lockedZone" data-p="A · 속도 · 기어" style="left:122px;top:160px;width:100px;height:26px">A</button>
     </div>
-    <span class="modetag">${({'서킷':'CIRCUIT','공도':'ROAD','시뮬레이터':'SIMULATOR'})[mode]} VIEW</span>${big?'':'<span class="arhint">탭해서 크게 보기</span>'}
+    <span class="modetag">${({'서킷':'CIRCUIT','공도':'ROAD','시뮬레이터':'SIMULATOR'})[mode]} VIEW</span>${big?'':`<button class="fullbtn" data-a="arFull">${ic('layout',14)}가로로 크게</button>`}
   </div>`;
 }
 /* =========================================================
@@ -533,13 +561,14 @@ E(){
   const Z=ZONES[S.cfgMode];
   const z=(id,l,x,y,w,h)=>`<button class="zone ${S.zones[id]?'on':'offz'}" data-a="zone" data-p="${id}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${l}</button>`;
   const opt=(k,t)=>{const on=S.cluster===k;return `<button class="card ${on?'sel':''}" data-a="cluster" data-p="${k}" style="padding:14px 14px 16px">
-    <div class="ar-panel opt-prev">${k==='shift'?`<div style="text-align:center"><span class="en" style="font-size:22px;font-weight:600">182</span> <span class="en" style="font-size:14px;color:var(--text-3)">5</span><div style="display:flex;gap:4px;margin-top:10px">${['#3DDC84','#3DDC84','#3DDC84','#3DDC84','#3DDC84','#F5D547','#F5D547','#F5D547','#E7222E','#E7222E','#2A2C30','#2A2C30'].map(c=>`<i style="width:6px;height:6px;border-radius:50%;background:${c}"></i>`).join('')}</div></div>`:
+    <div class="ar-panel opt-prev" style="position:relative;overflow:hidden"><img src="${arSrc(S.cfgMode,'thumb_'+k)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" onerror="this.remove()">${k==='shift'?`<div style="text-align:center"><span class="en" style="font-size:22px;font-weight:600">182</span> <span class="en" style="font-size:14px;color:var(--text-3)">5</span><div style="display:flex;gap:4px;margin-top:10px">${['#3DDC84','#3DDC84','#3DDC84','#3DDC84','#3DDC84','#F5D547','#F5D547','#F5D547','#E7222E','#E7222E','#2A2C30','#2A2C30'].map(c=>`<i style="width:6px;height:6px;border-radius:50%;background:${c}"></i>`).join('')}</div></div>`:
     `<div style="display:flex;align-items:center;gap:4px"><i style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8)"></i><span style="width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);display:grid;place-items:center;font:600 12px var(--font-en)">182</span><i style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8)"></i></div>`}</div>
     <div style="font-size:15px;font-weight:500">${t}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="sub" style="${on?'color:var(--text-1);font-weight:500':''}">${on?'사용 중':'선택'}</span><span class="radio ${on?'on':''}">${on?ic('check',16,2.2):''}</span></div></button>`;};
   return `${header('화면 구성')}<div class="scroll">
   <div class="seg" style="margin-top:14px">${['서킷','공도','시뮬레이터'].map(m=>`<button class="${S.cfgMode===m?'on':''}" data-a="cfgMode" data-p="${m}">${m}</button>`).join('')}</div>
-  ${arView(S.cfgMode,z,false)}
-  <p class="body2" style="margin-top:12px">구역을 눌러 켜고 끌 수 있어요. 위치는 고정되어, 시뮬레이터에서 익힌 시선이 서킷까지 이어집니다.</p>
+  <div class="arwrap">${arView(S.cfgMode,z,false)}</div>
+  <div class="zsum"><b id="zcount">${zoneCount()}</b><button class="tag" data-a="zonesReset">기본값으로</button></div>
+  <p class="body2" style="margin-top:10px">화면의 UI를 직접 눌러 켜고 끌 수 있어요. 위치는 고정되어, 시뮬레이터에서 익힌 시선이 서킷까지 그대로 이어집니다.</p>
   ${h1('핸들 위 표시')}
   <div class="grid2" id="optgrid">${opt('shift','시프트 라이트')}${opt('dial','3원형 클러스터')}</div>
   ${h1('항상 표시')}
@@ -705,9 +734,10 @@ O(){
     <div style="display:flex;justify-content:space-between"><b style="font-weight:500">랩 기록</b><span class="sub">8랩</span></div>
     <div style="display:flex;align-items:flex-end;justify-content:space-between;height:130px;margin-top:12px">${laps.map((v,i)=>`<button data-a="toastMsg" data-p="LAP ${i+1} · ${Math.floor(v/60)}:${(v%60).toFixed(2).padStart(5,'0')}" style="width:28px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">${i===5?'<span class="en" style="font-size:11px;font-weight:600">1:12.43</span>':''}<i style="width:24px;height:${(76-v)*26+16}px;border-radius:6px;background:${i===5?'var(--bg-inverse)':'var(--bg-track)'}"></i><span class="en sub" style="font-size:11px">${i+1}</span></button>`).join('')}</div>
   </div>
-  <div class="ar-panel replay" style="margin-top:20px">
-    <span class="lbl">PIT REPLAY · LAP 6</span>
-    <svg class="track" viewBox="0 0 345 190" fill="none"><path id="trk" d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#2A2C30" stroke-width="14" stroke-linejoin="round"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#81C4FF" stroke-width="2" stroke-dasharray="4 4" opacity=".8"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#fff" stroke-width="1.5" opacity=".8"/><circle id="car1" r="5" fill="#fff"/><circle id="car2" r="5" fill="#81C4FF"/></svg>
+  <div class="ar-panel replay" id="replayBox" style="margin-top:20px">
+    ${IMAGES.replay?`<img class="bg" src="${IMAGES.replay}" alt="피트 홀로그램 리플레이">`:''}
+    <span class="lbl" style="z-index:1">PIT REPLAY · LAP 6</span>
+    <svg class="track" style="z-index:1" viewBox="0 0 345 190" fill="none"><path id="trk" d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#2A2C30" stroke-width="14" stroke-linejoin="round"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#81C4FF" stroke-width="2" stroke-dasharray="4 4" opacity=".8"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#fff" stroke-width="1.5" opacity=".8"/><circle id="car1" r="5" fill="#fff"/><circle id="car2" r="5" fill="#81C4FF"/></svg>
     <button class="playbtn" data-a="replay" id="playbtn">${ic('play',24)}</button>
     <div class="prog"><i id="replayProg"></i></div>
   </div>
@@ -823,7 +853,8 @@ function refreshSheet(){if(sheetKey){const sh=document.getElementById('sheet');c
 function closeSheet(){sheetKey=null;document.getElementById('sheet').classList.remove('show');document.getElementById('scrim').classList.remove('show');}
 
 /* ---------- AR layer sync + landscape preview ---------- */
-function syncLayers(){AR_ORDER.forEach(k=>document.querySelectorAll('.layer-'+k).forEach(el=>el.classList.toggle('hide',!layerVisible(k))));
+function zoneCount(){const on=Object.values(S.zones).filter(Boolean).length+2;return `켜진 UI ${on} / ${Object.keys(S.zones).length+2}`;}
+function syncLayers(){const zc=document.getElementById('zcount');if(zc)zc.textContent=zoneCount();AR_ORDER.forEach(k=>document.querySelectorAll('.layer-'+k).forEach(el=>el.classList.toggle('hide',!layerVisible(k))));
   document.querySelectorAll('.bigchips [data-a="cluster"]').forEach(c=>c.classList.toggle('on',c.dataset.p===S.cluster));}
 function openAR(){
   const m=document.getElementById('armodal'),dev=document.getElementById('device');
@@ -902,11 +933,12 @@ const A={
   zone:p=>{S.zones[p]=!S.zones[p];save();syncLayers();
     const on=S.zones[p];const l=ZONES[S.cfgMode][p][1];
     document.querySelectorAll(`#zr-${p} .toggle`).forEach(t=>t.classList.toggle('on',on));
-    document.querySelectorAll(`.zone[data-p="${p}"]`).forEach(z=>{z.classList.toggle('on',on);z.classList.toggle('offz',!on);});
+    document.querySelectorAll(`.zone[data-p="${p}"]`).forEach(z=>{z.classList.toggle('on',on);z.classList.toggle('offz',!on);z.classList.remove('tap');void z.offsetWidth;z.classList.add('tap');});
     document.querySelectorAll(`.bigchips [data-p="${p}"]`).forEach(c=>c.classList.toggle('on',on));
     const r=document.getElementById('zr-'+p);if(r){r.classList.remove('flash');void r.offsetWidth;r.classList.add('flash');}
     toast(`${l}${josa(l,'이','가')} ${on?'활성화':'비활성화'}되었습니다`,on?'ok':'off');},
   arFull:()=>openAR(),
+  zonesReset:()=>{Object.keys(S.zones).forEach(k=>S.zones[k]=true);S.cluster='shift';save();refresh();toast('화면 구성을 기본값으로 되돌렸습니다');},
   arClose:()=>closeAR(),
   lockedZone:p=>toast(`${p}${josa(p,'은','는')} 안전을 위해 항상 표시됩니다`,'warn'),
 
@@ -929,9 +961,9 @@ const A={
   standTab:p=>{S.standTab=p;refresh();},
 
   /* replay */
-  replay:()=>{const btn=document.getElementById('playbtn');if(replayTimer){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);return;}
-    const path=document.getElementById('trk');if(!path)return;const L=path.getTotalLength();let t=0;btn.innerHTML=ic('pause',22);btn.style.opacity='.6';toast('LAP 6 리플레이 · 흰색 이번 랩 / 파란색 내 베스트');
-    replayTimer=setInterval(()=>{t+=0.006;if(t>=1){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);btn.style.opacity='1';t=1;}
+  replay:()=>{const btn=document.getElementById('playbtn');if(replayTimer){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);btn.style.opacity='1';const rb=document.getElementById('replayBox');if(rb)rb.classList.remove('playing');return;}
+    const path=document.getElementById('trk');if(!path)return;const L=path.getTotalLength();let t=0;btn.innerHTML=ic('pause',22);btn.style.opacity='.6';const rb=document.getElementById('replayBox');if(rb)rb.classList.add('playing');toast('LAP 6 리플레이 · 흰색 이번 랩 / 파란색 내 베스트');
+    replayTimer=setInterval(()=>{t+=0.006;if(t>=1){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);btn.style.opacity='1';t=1;const rb=document.getElementById('replayBox');if(rb)rb.classList.remove('playing');}
       const p1=path.getPointAtLength(L*t),p2=path.getPointAtLength(L*Math.max(0,t-0.025));const c1=document.getElementById('car1'),c2=document.getElementById('car2');
       if(!c1)return;c1.setAttribute('cx',p1.x);c1.setAttribute('cy',p1.y);c2.setAttribute('cx',p2.x);c2.setAttribute('cy',p2.y);document.getElementById('replayProg').style.width=(t*100)+'%';},30);},
   sheetReplay:()=>{closeSheet();setTimeout(()=>A.replay(),300);}
