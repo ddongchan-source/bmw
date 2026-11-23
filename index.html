@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#EDEDEB">
+<title>My BMW · XREAL M Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   Design tokens — Enduring Elegance (Light · App)
+   ========================================================= */
+:root{
+  --bg-canvas:#EDEDEB; --bg-surface:#FAFAF8; --bg-inverse:#0B0B0D; --bg-subtle:#D6D7D9; --bg-track:#C9CACC;
+  --text-1:#0B0B0D; --text-2:#5C5F63; --text-3:#8A8D91; --text-inv:#EDEDEB; --text-accent:#16588E;
+  --border:#C9CACC; --border-strong:#8A8D91;
+  --signal:#81C4FF; --brand:#16588E; --alert:#E7222E; --green:#3DDC84; --amber:#F2A93B;
+  --graphite:#1E1F22; --graphite-700:#2A2C30; --silver-200:#B9BBBE;
+  --r-sm:10px; --r-md:20px; --r-lg:28px; --r-full:999px; --chamfer:16px;
+  --shadow:0 6px 18px rgba(0,0,0,.04);
+  --font-en:'Inter',system-ui,-apple-system,sans-serif;
+  --font-kr:'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font-kr);color:var(--text-1);background:#D9DADC;display:flex;align-items:center;justify-content:center;min-height:100vh;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.en{font-family:var(--font-en)}
+
+/* ---------- Device ---------- */
+.device{position:relative;width:393px;height:852px;background:var(--bg-canvas);border-radius:54px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.18),0 0 0 10px #111,0 0 0 11px #333}
+@media (max-width:520px){body{background:var(--bg-canvas);display:block}.device{width:100vw;height:100dvh;border-radius:0;box-shadow:none}}
+.statusbar{position:absolute;top:0;left:0;right:0;height:50px;z-index:40;background:linear-gradient(rgba(237,237,235,.92) 70%,rgba(237,237,235,0));display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 44px;pointer-events:none}
+.statusbar .time{font:600 17px var(--font-en)}
+.statusbar .batt{width:26px;height:13px;border-radius:4px;background:var(--text-1)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;animation:fadeIn .22s ease-out}
+.screen.back{animation:fadeBack .22s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@keyframes fadeBack{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.scroll{position:relative;flex:1;overflow-y:auto;overflow-x:hidden;padding:108px 24px 128px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.scroll.nohead{padding-top:0}
+
+/* ---------- Header ---------- */
+.header{position:absolute;top:0;left:0;right:0;height:108px;z-index:20;background:rgba(237,237,235,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.header .backbtn{position:absolute;left:16px;top:52px;width:44px;height:44px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border);display:grid;place-items:center}
+.header h1{position:absolute;left:0;right:0;top:62px;text-align:center;font-weight:500;font-size:17px;pointer-events:none}
+.header .backbtn{z-index:2}
+
+/* ---------- Tab bar (pill nav) ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:96px;z-index:30;background:rgba(237,237,235,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:center;gap:6px;padding-top:16px}
+.tab{height:52px;min-width:52px;border-radius:var(--r-full);background:var(--bg-surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.tab.active{background:var(--bg-inverse);border-color:var(--bg-inverse);color:var(--text-inv);padding:0 18px 0 16px}
+.tab.active span{font-size:14px;font-weight:500}
+.tab.disabled{cursor:default}
+.homeind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:135px;height:5px;border-radius:3px;background:var(--text-1);z-index:31}
+
+/* ---------- Type ---------- */
+.h1{font-size:22px;font-weight:500;margin:32px 0 14px;display:flex;justify-content:space-between;align-items:baseline}
+.h1 .link{font-size:14px;color:var(--text-accent);font-weight:500}
+.h1 .meta{font-size:13px;color:var(--text-2);font-weight:400}
+.metric-xl{font:300 64px/1 var(--font-en);letter-spacing:-.03em}
+.metric-l{font:300 36px/1.05 var(--font-en);letter-spacing:-.02em}
+.overline{font:600 12px var(--font-en);letter-spacing:.1em;color:var(--text-2);text-transform:uppercase}
+.body2{font-size:13px;color:var(--text-2);line-height:1.55}
+.center{text-align:center}
+
+/* ---------- Cards ---------- */
+.card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px;position:relative}
+.card.inverse{background:var(--bg-inverse);border-color:var(--bg-inverse);color:var(--text-inv)}
+.card.inverse .sub{color:var(--silver-200)}
+.card.sel{border:2px solid var(--bg-inverse)}
+button.card{display:block;width:100%;transition:transform .12s}
+button.card:active,.qa:active,.btn:active,.row:active{transform:scale(.98)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sub{font-size:12.5px;color:var(--text-2)}
+.ar-panel{background:var(--bg-inverse);color:#fff;clip-path:polygon(var(--chamfer) 0,100% 0,100% calc(100% - var(--chamfer)),calc(100% - var(--chamfer)) 100%,0 100%,0 var(--chamfer))}
+
+/* ---------- List rows (no box, 1px line) ---------- */
+.list{border-bottom:1px solid var(--border)}
+.row{width:100%;display:flex;align-items:center;gap:14px;min-height:60px;padding:12px 0;border-top:1px solid var(--border);transition:background .15s}
+.list .row:first-child{border-top:0}
+.row .rt{flex:1;min-width:0}
+.row .t{font-size:15px;font-weight:500}
+.row .s{font-size:12.5px;color:var(--text-2);margin-top:3px}
+.row .v{font-size:14px;color:var(--text-2);white-space:nowrap}
+.row .v.ok{color:var(--text-accent);font-weight:500}
+.row.dim .t,.row.dim svg{color:var(--text-3)}
+.chev{color:var(--text-3)}
+
+/* ---------- Controls ---------- */
+.toggle{width:52px;height:32px;border-radius:var(--r-full);background:var(--bg-track);position:relative;flex:none;transition:background .2s}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .2s}
+.toggle.on{background:var(--brand)}
+.toggle.on::after{transform:translateX(20px)}
+.radio{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border-strong);flex:none;display:grid;place-items:center}
+.radio.on{background:var(--bg-inverse);border-color:var(--bg-inverse);color:#fff}
+.btn{display:block;width:100%;height:54px;border-radius:var(--r-full);font-size:15px;font-weight:500;text-align:center;transition:transform .12s,opacity .2s}
+.btn.primary{background:var(--bg-inverse);color:var(--text-inv)}
+.btn.secondary{background:var(--bg-surface);border:1px solid var(--border)}
+.btn.text{height:44px;color:var(--text-accent)}
+.btn+.btn{margin-top:12px}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.tag{display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:var(--r-full);background:var(--bg-surface);border:1px solid var(--border);font-size:12.5px;font-weight:500;white-space:nowrap}
+.tag.inv{background:var(--bg-inverse);color:var(--text-inv);border-color:var(--bg-inverse)}
+.tags{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:flex;background:var(--bg-subtle);border-radius:var(--r-full);padding:4px}
+.seg button{flex:1;height:36px;border-radius:var(--r-full);font-size:14px;color:var(--text-2);text-align:center;transition:all .2s}
+.seg button.on{background:var(--bg-surface);color:var(--text-1);font-weight:500;box-shadow:var(--shadow)}
+.chips{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.date{height:64px;border-radius:22px;background:var(--bg-surface);border:1px solid var(--border);text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.date small{font-size:12px;color:var(--text-2)}
+.date b{font:400 18px var(--font-en)}
+.date.on{background:var(--bg-inverse);border-color:var(--bg-inverse);color:var(--text-inv)}
+.date.on small{color:var(--silver-200)}
+.date.off{opacity:.4;pointer-events:none}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{height:52px;border-radius:var(--r-full);background:var(--bg-surface);border:1px solid var(--border);text-align:center;display:flex;flex-direction:column;justify-content:center}
+.slot b{font:400 15px var(--font-en)}
+.slot small{font-size:10.5px;color:var(--text-2)}
+.slot.on{background:var(--bg-inverse);color:var(--text-inv);border-color:var(--bg-inverse)}
+.slot.on small{color:var(--silver-200)}
+.slot.off{opacity:.45;pointer-events:none}
+.icbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--bg-subtle);border:1px solid var(--bg-surface);position:relative}
+.icbtn.inv{background:var(--bg-inverse);color:#fff;border-color:var(--bg-inverse)}
+.dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--alert);border:1.5px solid var(--bg-inverse)}
+
+/* ---------- Placeholder images ---------- */
+.ph{background:var(--bg-subtle);border:1.2px dashed var(--border-strong);border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-3);font-size:12px;overflow:hidden;position:relative}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph.has{border:0;background:none}
+
+/* ---------- Home ---------- */
+.hero{height:440px;border-radius:0;border-left:0;border-right:0;border-top:0;margin:0 -24px}
+.topbar{position:absolute;top:52px;left:24px;right:16px;display:flex;align-items:center;gap:8px;z-index:5}
+.topbar .name{flex:1;font:500 20px var(--font-en)}
+.fuel{text-align:center;margin-top:12px}
+.segbar{display:flex;gap:6px;margin:26px 0 22px}
+.segbar i{flex:1;height:5px;border-radius:3px;background:var(--bg-track)}
+.segbar i.on{background:var(--signal)}
+.qas{display:flex;justify-content:space-between}
+.qa{width:56px;text-align:center;font-size:12px;color:var(--text-2);transition:transform .12s}
+.qa .c{width:56px;height:56px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border);display:grid;place-items:center;margin-bottom:8px;color:var(--text-1);box-shadow:var(--shadow);transition:all .2s}
+.qa.on .c{background:var(--bg-inverse);color:#fff;border-color:var(--bg-inverse)}
+.qa.busy .c{animation:pulse .8s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.mcard{height:182px;display:flex;flex-direction:column;text-align:left}
+.mcard .hd{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500}
+.mcard .ring{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.4);display:grid;place-items:center}
+.mcard .val{margin-top:auto}
+.mcard .chev{position:absolute;right:16px;bottom:16px}
+
+/* ---------- Misc ---------- */
+.level-dots{position:relative;display:flex;justify-content:space-between;margin:28px 6px 6px}
+.level-dots::before{content:'';position:absolute;left:6px;right:6px;top:5px;height:2px;background:var(--graphite-700)}
+.level-dots .fill{position:absolute;left:6px;top:5px;height:2px;background:#fff}
+.level-dots div{position:relative;width:12px;height:12px;border-radius:50%;background:var(--graphite-700)}
+.level-dots div.done{background:#fff}
+.level-dots div.cur{width:18px;height:18px;margin-top:-3px;background:#fff;border:3px solid var(--signal)}
+.level-lbl{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-3)}
+.level-lbl span{width:52px;text-align:center}
+.level-lbl span.cur{color:#fff;font-weight:500}
+.bar{height:4px;border-radius:2px;background:var(--graphite-700);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--signal);border-radius:2px}
+.done-icon{width:80px;height:80px;border-radius:50%;background:var(--bg-inverse);color:#fff;display:grid;place-items:center;margin:40px auto 24px;box-shadow:var(--shadow)}
+.ticket{position:relative;padding:22px 24px}
+.ticket .cut{position:absolute;top:190px;width:24px;height:24px;border-radius:50%;background:var(--bg-canvas)}
+.qr{width:140px;height:140px;border-radius:16px;background:#fff;display:grid;grid-template-columns:repeat(9,1fr);padding:12px;gap:2px}
+.qr i{background:#0B0B0D;border-radius:1px}
+.qr i.w{background:#fff}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-surface);font-size:20px;text-align:center}
+.timeline .ti{display:flex;gap:16px;position:relative;padding-bottom:22px}
+.timeline .ti:last-child{padding-bottom:0}
+.timeline .ti::before{content:'';position:absolute;left:69px;top:16px;bottom:-4px;width:1.5px;background:var(--border)}
+.timeline .ti:last-child::before{display:none}
+.timeline .tm{width:46px;font:500 14px var(--font-en);color:var(--text-2)}
+.timeline .pt{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--text-1);background:var(--bg-surface);margin-top:5px;flex:none;z-index:1}
+.timeline .pt.on{background:var(--text-1)}
+.ladder{position:relative;padding-left:46px}
+.ladder::before{content:'';position:absolute;left:12px;top:24px;bottom:24px;width:2px;background:var(--bg-track)}
+.ladder .lnode{position:absolute;left:0;width:26px;height:26px;border-radius:50%;background:var(--bg-surface);border:1.5px solid var(--bg-track);display:grid;place-items:center;color:#fff}
+.ladder .lnode.done{background:var(--bg-inverse);border-color:var(--bg-inverse)}
+.ladder .lnode.next{border:3px solid var(--bg-inverse)}
+.ladder .step{position:relative;margin-bottom:16px}
+.ladder .lnode{top:20px;left:-46px}
+.dbar{position:relative;width:70px;height:6px}
+.dbar::before{content:'';position:absolute;left:50%;top:-5px;height:16px;width:1px;background:var(--border-strong)}
+.dbar i{position:absolute;top:0;height:6px;border-radius:3px}
+.standing{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:22px}
+.standing.me{background:var(--bg-subtle)}
+.standing .p{width:22px;font:600 16px var(--font-en);text-align:center}
+.replay{position:relative;height:190px;overflow:hidden}
+.replay svg.track{position:absolute;inset:0;width:100%;height:100%}
+.playbtn{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--bg-surface);display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:2}
+.replay .prog{position:absolute;left:18px;right:18px;bottom:16px;height:3px;border-radius:2px;background:rgba(255,255,255,.2)}
+.replay .prog i{display:block;height:100%;width:0;background:var(--signal);border-radius:2px}
+.replay .lbl{position:absolute;left:18px;top:16px;font:600 12px var(--font-en);letter-spacing:.1em;color:var(--silver-200)}
+
+/* ---------- Toast ---------- */
+.toast{position:absolute;left:24px;right:24px;bottom:112px;z-index:60;background:var(--bg-inverse);color:var(--text-inv);border-radius:var(--r-full);min-height:56px;padding:12px 20px 12px 14px;display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.22);transform:translateY(20px);opacity:0;pointer-events:none;transition:all .25s}
+.toast.show{transform:none;opacity:1}
+.toast .ti{width:26px;height:26px;border-radius:50%;background:var(--green);color:var(--bg-inverse);display:grid;place-items:center;flex:none}
+.toast.warn .ti{background:var(--amber)}
+.toast.off .ti{background:var(--graphite-700);color:#fff}
+
+/* ---------- Sheet ---------- */
+.scrim{position:absolute;inset:0;z-index:70;background:rgba(11,11,13,.35);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:71;background:var(--bg-canvas);border-radius:28px 28px 0 0;padding:12px 24px 40px;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:86%;overflow-y:auto}
+.sheet.show{transform:none}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--bg-track);margin:0 auto 18px}
+.sheet h2{font-size:20px;font-weight:500;margin-bottom:6px}
+.sheet .desc{font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.55}
+.sheet .acts{margin-top:22px}
+.spinner{width:22px;height:22px;border:2.5px solid var(--bg-track);border-top-color:var(--text-1);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress{height:6px;border-radius:3px;background:var(--bg-track);overflow:hidden;margin:18px 0}
+.progress i{display:block;height:100%;width:0;background:var(--brand);transition:width .3s}
+.windshield{position:relative;height:224px;margin-top:20px}
+/* ---------- AR driver view (layered images) ---------- */
+.arview{position:relative;width:100%;aspect-ratio:16/9;margin-top:20px;cursor:zoom-in;background:#0B0B0D}
+.arview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:opacity .35s ease}
+.arview img.hide{opacity:0}
+.arview .schem{display:none;position:absolute;inset:0}
+.arview.noimg{aspect-ratio:auto;height:224px}
+.arview.noimg img{display:none}
+.arview.noimg .schem{display:block}
+.arview .arhint{position:absolute;right:12px;bottom:10px;z-index:3;font-size:11px;color:#fff;background:rgba(11,11,13,.55);padding:4px 10px;border-radius:999px;pointer-events:none}
+.arview .modetag{position:absolute;left:22px;top:10px;z-index:3;font:600 11px var(--font-en);letter-spacing:.1em;color:#fff;background:rgba(11,11,13,.55);padding:4px 10px;border-radius:999px;pointer-events:none}
+.armodal{position:absolute;inset:0;z-index:80;background:#0B0B0D;display:none;align-items:center;justify-content:center}
+.armodal.show{display:flex}
+.armodal .rot{transform:rotate(90deg);display:flex;flex-direction:column;gap:12px}
+.armodal .arview{margin:0;cursor:zoom-out}
+.armodal .bigchips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.armodal .bigchips button{height:30px;padding:0 12px;border-radius:999px;border:1px solid #5C5F63;color:#B9BBBE;font-size:12px;font-weight:500}
+.armodal .bigchips button.on{background:#81C4FF;border-color:#81C4FF;color:#0B0B0D}
+.armodal .bigchips button.fixed{background:#EDEDEB;border-color:#EDEDEB;color:#0B0B0D}
+.armodal .close{position:absolute;top:56px;right:20px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;z-index:2}
+.zone{position:absolute;border:1px dashed rgba(255,255,255,.7);border-radius:5px;background:rgba(255,255,255,.06);font:700 10px var(--font-en);color:#fff;padding:2px 4px;text-align:left;transition:all .2s}
+.zone.on{background:rgba(129,196,255,.18);border-color:var(--signal)}
+.zone.offz{opacity:.3}
+.zone.lock{background:rgba(255,255,255,.92);color:#0B0B0D;border-style:solid}
+.opt-prev{height:96px;margin-bottom:14px;display:grid;place-items:center}
+.flash{animation:flash .9s}
+@keyframes flash{30%{background:rgba(129,196,255,.25)}}
+</style>
+</head>
+<body>
+<div class="device" id="device">
+  <div class="statusbar"><span class="time">9:41</span><span class="batt"></span></div>
+  <div id="app"></div>
+  <div class="toast" id="toast"><span class="ti" id="toastIcon"></span><span id="toastText"></span></div>
+  <div class="scrim" id="scrim" data-a="closeSheet"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="armodal" id="armodal"></div>
+</div>
+
+<script>
+/* =========================================================
+   IMAGE SLOTS — 이미지 경로를 넣으면 플레이스홀더 대신 표시됩니다.
+   ========================================================= */
+const IMAGES = {
+  hero: '',          // 차량 히어로 (M4 Competition 정면)
+  glasses: '',       // AR 글라스 제품 이미지
+  glassesSmall: '',  // XREAL M 허브 상단 글라스
+  track: '',         // 영종도 트랙맵 / 서킷 이미지
+  simRoom: '',       // 시뮬레이터 룸 이미지
+};
+
+/* =========================================================
+   AR DRIVER VIEW LAYERS — 화면 구성(E)의 운전자 뷰
+   폴더 구조:  ar/circuit/…  ar/road/…  ar/sim/…
+   base.jpg  = UI가 없는 운전자 시점 배경
+   나머지     = 배경과 "같은 크기"의 투명 PNG (해당 UI만 그려진 레이어)
+   파일이 없으면 자동으로 도식(구역 박스) 미리보기로 대체됩니다.
+   ========================================================= */
+const AR_DIR = 'ar';
+const MODE_DIR = { '서킷':'circuit', '공도':'road', '시뮬레이터':'sim' };
+const AR_LAYERS = {
+  base:'base.jpg',       // 배경 (UI 없음)
+  A_shift:'A_shift.png', // A · 핸들 위 — 시프트 라이트
+  A_dial:'A_dial.png',   // A · 핸들 위 — 3원형 클러스터
+  B:'B.png',             // 랩타임 / 시계
+  C:'C.png',             // 타이밍 타워 / 표지판
+  D:'D.png',             // 트랙맵 / 내비
+  Dp:'Dp.png',           // 차량 상태
+  E:'E.png',             // 안전 알림 (항상 켜짐)
+  F:'F.png',             // 노면 가이드 / 교차로 화살표 / 이상적 라인
+  GH:'GH.png'            // 좌우 측면 창
+};
+const AR_ORDER = ['F','GH','B','C','D','Dp','E','A_shift','A_dial'];
+const arSrc = (mode,k) => `${AR_DIR}/${MODE_DIR[mode]}/${AR_LAYERS[k]}`;
+
+/* =========================================================
+   ICONS
+   ========================================================= */
+const IC = {
+  bell:'<path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15z"/><path d="M10 21h4"/>',
+  user:'<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.3-3.6 4.2-5.6 7.5-5.6s6.2 2 7.5 5.6z"/>',
+  car:'<path d="M3 15.5l1.6-4.4c.4-1.1 1.4-1.8 2.6-1.8h9.6c1.2 0 2.2.7 2.6 1.8l1.6 4.4v2.8H3z"/><path d="M6 18.3v1.4M18 18.3v1.4M3 13.3h18"/><circle cx="7" cy="15.6" r=".9"/><circle cx="17" cy="15.6" r=".9"/>',
+  map:'<path d="M3 7l5-2 6 2 4-1.5V19l-4 1.5-6-2-5 2z"/><path d="M8 5v13.5M14 7v13.5"/><circle cx="19" cy="5" r="2.2"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5M12 3.5c-2.5 2.6-3.5 5.4-3.5 8.5s1 5.9 3.5 8.5"/>',
+  xm:'<rect x="2.5" y="10" width="8" height="6.5" rx="2.6"/><rect x="13.5" y="10" width="8" height="6.5" rx="2.6"/><path d="M10.5 12.6h3"/><path d="M14.6 7.2l1.3-2.6M17.2 7.2l1.3-2.6M19.8 7.2l1.3-2.6"/>',
+  glasses:'<rect x="2.5" y="10" width="8" height="6.5" rx="2.6"/><rect x="13.5" y="10" width="8" height="6.5" rx="2.6"/><path d="M10.5 12.6h3M2.5 11.5L4 7M21.5 11.5L20 7"/>',
+  lock:'<rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8.5a3.5 3.5 0 017 0V11"/>',
+  unlock:'<rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8.5 11V8.5a3.5 3.5 0 016.8-1.2"/>',
+  light:'<path d="M13 6.5a5.5 5.5 0 010 11z"/><path d="M4 8.5h6M4 11h6M4 13.5h6M4 16h6"/>',
+  horn:'<path d="M4 10h3l6-4v12l-6-4H4z"/><path d="M16.5 9.5a3.5 3.5 0 010 5M18.8 7.5a6.5 6.5 0 010 9"/>',
+  fan:'<circle cx="12" cy="12" r="1.4"/><path d="M12 10.6c-.3-3.2.8-6 3-6 1.8 0 1.6 3.4-1.6 6.2M13.4 12c3.2-.3 6 .8 6 3 0 1.8-3.4 1.6-6.2-1.6M12 13.4c.3 3.2-.8 6-3 6-1.8 0-1.6-3.4 1.6-6.2M10.6 12c-3.2.3-6-.8-6-3 0-1.8 3.4-1.6 6.2 1.6"/>',
+  pin:'<path d="M12 20.5s-6-5.6-6-10.3a6 6 0 0112 0c0 4.7-6 10.3-6 10.3z"/><circle cx="12" cy="10.2" r="2.1"/>',
+  flag:'<path d="M6 21V4M6 4.5h11l-2.2 4 2.2 4H6"/>',
+  chevR:'<path d="M9.5 6l6 6-6 6"/>', chevL:'<path d="M14.5 6l-6 6 6 6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  sim:'<rect x="3" y="4" width="18" height="11" rx="1.5"/><circle cx="12" cy="17.5" r="3.5"/><path d="M8.5 17.5h7M12 17.5v3.5"/>',
+  ticket:'<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/>',
+  wrench:'<path d="M14.5 6.5a4 4 0 01-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 015.3-5.3l-2.5 2.5-2-2z"/>',
+  tire:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>',
+  road:'<path d="M8 21L10 3M16 21L14 3M12 6v2M12 11v2M12 16v2"/>',
+  img:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>',
+  layout:'<rect x="3" y="4.5" width="18" height="14" rx="2"/><path d="M3 9.5h18M9 9.5v9"/>',
+  ghost:'<path d="M6 20V10a6 6 0 0112 0v10l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5z"/><circle cx="10" cy="11" r=".8"/><circle cx="14" cy="11" r=".8"/>',
+  bellA:'<path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15z"/><path d="M10 21h4M12 8v3.5"/>',
+  eye:'<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  lens:'<circle cx="12" cy="12" r="8.5"/><path d="M8 9a5 5 0 015-2.5"/>',
+  helmet:'<path d="M4 15a8 8 0 0116 0v3H4z"/><path d="M4 13h9l3 2"/>',
+  update:'<path d="M20 11a8 8 0 10-2.5 6"/><path d="M20 5v6h-6"/>',
+  plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  tower:'<path d="M5 6h14M5 10.5h14M5 15h14M5 19.5h9"/>',
+  map2:'<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z"/><path d="M9 4v14M15 6v14"/>',
+  side:'<path d="M4 6h10l6 6v6H4z"/><path d="M4 12h16"/>',
+  voice:'<path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/>',
+  board:'<rect x="4" y="4" width="16" height="12" rx="1.5"/><path d="M12 16v4M8 8h8M8 12h5"/>',
+  gauge:'<path d="M4 17a8 8 0 1116 0"/><path d="M12 17l4-5"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  trophy:'<path d="M7 4h10v5a5 5 0 01-10 0zM12 14v4M8 20h8M7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4"/>',
+  play:'<path d="M8 5.5v13l11-6.5z" fill="currentColor"/>', pause:'<path d="M8 5v14M16 5v14" stroke-width="3"/>',
+  info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
+  temp:'<path d="M10 14.5V5a2 2 0 014 0v9.5a4 4 0 11-4 0z"/>',
+  door:'<path d="M5 20V5l9-2v17M14 4h5v16M11 12h.01"/>',
+  shield:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>'
+};
+const ic=(k,s=24,sw=1.5)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${IC[k]||''}</svg>`;
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const DEFAULT = {
+  locked:true, climate:false, climateTimer:false, climateTime:'07:30', climateTemp:22,
+  battery:82, glassMode:'auto', notif:'표준', helmet:true,
+  cluster:'shift', cfgMode:'서킷',
+  zones:{B:true,C:true,D:true,Dp:true,F:true,GH:true},
+  coach:'auto', ghosts:['best','p1'], voice:true, pitboard:true,
+  iris:true, lost:false, irisDate:'2026. 3. 12.',
+  lensL:-2.25, lensR:-2.00, center:'강남', lensDay:3, lensTime:'14:00', withService:true, lensReq:null,
+  ticket:1, simDay:4, simSlot:'11:00', simGlasses:true, simGhost:'대리점 첫 랩 1:18.64', simCoach:'LV1 · 자동', simBooking:null,
+  roundJoined:false, standTab:'B', read:{}
+};
+let S;
+try{S=Object.assign(structuredClone(DEFAULT),JSON.parse(localStorage.getItem('xrealM')||'{}'));}catch(e){S=structuredClone(DEFAULT);}
+const save=()=>{try{localStorage.setItem('xrealM',JSON.stringify(S));}catch(e){}};
+
+const ZONES={
+  '서킷':{B:['clock','B · 랩타임'],C:['tower','C · 타이밍 타워','내 기록 대비 순위'],D:['map2','D · 트랙맵'],Dp:['car',"D' · 차량 상태",'이상이 있을 때만'],F:['road','F · 노면 가이드','코치 레벨에 따라 줄어듦'],GH:['side','G · H · 측면 창','코너 시선 · 스포터 · 피트 보드']},
+  '공도':{B:['clock','B · 시계'],C:['tower','C · 도로 표지판','최대 2개까지 표시'],D:['map2','D · 내비게이션'],Dp:['car',"D' · 차량 상태",'이상이 있을 때만'],F:['road','F · 교차로 화살표','교차로에서만 표시'],GH:['side','G · H · 측면 창','사각지대 · 교차로 확인']},
+  '시뮬레이터':{B:['clock','B · 랩타임'],C:['tower','C · 타이밍 타워','반복 횟수 · 베스트'],D:['map2','D · 트랙맵'],Dp:['car',"D' · 차량 상태",'시뮬레이터에서는 숨김'],F:['road','F · 이상적 라인','파란 선 · 내 라인 흰 선'],GH:['side','G · H · 측면 창','코너 시선 · 즉시 리플레이']}
+};
+const GHOSTS={best:['ghost','내 베스트','1:12.43'],p1:['flag','클래스 1위','1:11.72'],dealer:['car','대리점 첫 랩','1:18.64'],last:['clock','지난 랩','1:13.05']};
+const COACH={auto:['gauge','자동','기록이 안정되면 다음 단계로'],lv1:['road','LV1 · 풀 가이드','라인 · 브레이킹 보드 · 음성 코치'],lv2:['flag','LV2 · 포인트만','브레이킹 포인트와 에이펙스'],eng:['ghost','엔지니어','고스트와 기록 차이만']};
+const CENTERS={'강남':'2.1 km · 선호 센터','성수':'5.4 km','분당':'17 km'};
+const DAYS=['일','월','화','수','목','금','토'];
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const josa=(w,a,b)=>{const c=w.trim().slice(-1).charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3)return (c-0xAC00)%28?a:b;return /[0-9lmnLMN]$/.test(w.trim())?a:b;};
+const fmtLens=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+const img=(key,label,cls='',style='')=>IMAGES[key]?`<div class="ph has ${cls}" style="${style}"><img src="${IMAGES[key]}" alt="${label}"></div>`:`<div class="ph ${cls}" style="${style}">${ic('img',28,1.3)}<span>${label}</span></div>`;
+const header=(t,back=true)=>`<div class="header">${back?`<button class="backbtn" data-a="back" aria-label="뒤로">${ic('chevL',22)}</button>`:''}<h1>${t}</h1></div>`;
+function tabbar(active){
+  const tabs=[['map','지도',null],['globe','탐색',null],['car','차량','A'],['xm','XREAL M','C'],['user','프로필',null]];
+  return `<nav class="tabbar">${tabs.map(([k,l,dest],i)=>i===active?`<button class="tab active" ${dest?`data-a="tab" data-p="${dest}"`:''}>${ic(k,22)}<span>${l}</span></button>`:`<button class="tab ${dest?'':'disabled'}" ${dest?`data-a="tab" data-p="${dest}"`:''} aria-label="${l}">${ic(k,22)}</button>`).join('')}</nav><div class="homeind"></div>`;
+}
+function right(o){
+  if(o.toggle!==undefined)return `<span class="toggle ${o.toggle?'on':''}"></span>`;
+  if(o.radio!==undefined)return `<span class="radio ${o.radio?'on':''}">${o.radio?ic('check',16,2.2):''}</span>`;
+  if(o.lock)return `<span class="chev">${ic('lock',20)}</span>`;
+  if(o.none)return '';
+  return `<span class="chev">${ic('chevR',20)}</span>`;
+}
+const row=o=>`<button class="row ${o.dim?'dim':''} ${o.cls||''}" ${o.a?`data-a="${o.a}"`:''} ${o.p!==undefined?`data-p="${o.p}"`:''} ${o.id?`id="${o.id}"`:''}>${ic(o.i)}<div class="rt"><div class="t">${o.t}</div>${o.s?`<div class="s">${o.s}</div>`:''}</div>${o.v?`<span class="v ${o.vok?'ok':''}">${o.v}</span>`:''}${right(o)}</button>`;
+const list=rows=>`<div class="list">${rows.map(row).join('')}</div>`;
+const h1=(t,link,linkA,linkP)=>`<div class="h1"><span>${t}</span>${link?(linkA?`<button class="link" data-a="${linkA}" data-p="${linkP||''}">${link}</button>`:`<span class="meta">${link}</span>`):''}</div>`;
+const dateChips=(sel,a)=>`<div class="chips">${DAYS.map((d,i)=>`<button class="date ${i===sel?'on':''} ${i===0?'off':''}" data-a="${a}" data-p="${i}"><small>${d}</small><b>${23+i}</b></button>`).join('')}</div>`;
+const slotGrid=(arr,sel,a)=>`<div class="slots">${arr.map(([t,st])=>`<button class="slot ${t===sel?'on':''} ${st==='off'?'off':''}" data-a="${a}" data-p="${t}"><b>${t}</b><small>${t===sel?'선택됨':(st==='off'?'마감':st)}</small></button>`).join('')}</div>`;
+
+
+/* AR driver view: layered images + fallback schematic */
+function layerVisible(k){if(k==='A_shift')return S.cluster==='shift';if(k==='A_dial')return S.cluster==='dial';if(k==='E')return true;return !!S.zones[k];}
+function arView(mode,z,big){
+  const layers=AR_ORDER.map(k=>`<img class="layer layer-${k} ${layerVisible(k)?'':'hide'}" src="${arSrc(mode,k)}" alt="" onerror="this.remove()">`).join('');
+  return `<div class="ar-panel arview" ${big?'data-a="arClose"':'data-a="arFull"'}>
+    <img class="base" src="${arSrc(mode,'base')}" alt="${mode} 운전자 뷰" onerror="this.closest('.arview').classList.add('noimg')">
+    ${layers}
+    <div class="schem">
+    <svg width="100%" height="224" viewBox="0 0 345 224" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" style="position:absolute;inset:0"><path d="M58 22 L287 22 L316 150 L29 150 Z"/><path d="M12 44 L50 26 L24 150 L8 150 Z"/><path d="M333 44 L295 26 L321 150 L337 150 Z"/><path d="M172 64 L118 150 M172 64 L226 150" stroke-opacity=".15"/><path d="M104 224 A70 70 0 0 1 240 224" stroke-width="8" stroke-opacity=".5"/></svg>
+    ${z('B','B',66,28,46,16)}${z('C','C',64,48,46,52)}${z('D','D',236,28,46,16)}${z('Dp',"D'",238,48,40,26)}${z('F','F',150,96,46,22)}${z('GH','G',14,62,22,44)}${z('GH','H',309,62,22,44)}
+    <button class="zone lock" data-a="lockedZone" data-p="E · 안전 알림" style="left:132px;top:28px;width:82px;height:14px">E</button>
+    <button class="zone lock" data-a="lockedZone" data-p="A · 속도 · 기어" style="left:122px;top:160px;width:100px;height:26px">A</button>
+    </div>
+    <span class="modetag">${({'서킷':'CIRCUIT','공도':'ROAD','시뮬레이터':'SIMULATOR'})[mode]} VIEW</span>${big?'':'<span class="arhint">탭해서 크게 보기</span>'}
+  </div>`;
+}
+/* =========================================================
+   SCREENS
+   ========================================================= */
+const SCREENS={
+/* ---------- A · 차량 홈 ---------- */
+A(){
+  const qa=[['lock','잠금','lock',S.locked],['unlock','해제','unlock',!S.locked],['light','라이트','light',false],['horn','경적','horn',false],['fan','공조','climate',S.climate]];
+  const unread=['n1','n2','n3','n4'].some(k=>!S.read[k]);
+  return `<div class="scroll nohead">
+  ${img('hero','차량 히어로 이미지 (M4 Competition 정면)','hero')}
+  <div class="topbar"><span class="name">M4 Competition</span>
+    <button class="icbtn inv" data-a="go" data-p="B" aria-label="알림">${ic('bell',22)}${unread?'<i class="dot"></i>':''}</button>
+    <button class="icbtn" aria-label="프로필">${ic('user',22)}</button></div>
+  <div class="fuel"><div class="sub" style="font-size:15px">연료 잔여량</div><div class="metric-xl" style="margin:10px 0 12px">68%</div><div class="sub" style="font-size:14px">412 km 주행 가능</div></div>
+  <div class="segbar">${Array.from({length:10},(_,i)=>`<i class="${i<7?'on':''}"></i>`).join('')}</div>
+  <div class="qas">${qa.map(([k,l,a,on])=>`<button class="qa ${on?'on':''}" data-a="remote" data-p="${a}" id="qa-${a}"><div class="c">${ic(k,24)}</div>${l}</button>`).join('')}</div>
+  <div class="grid2" style="margin-top:28px">
+    <button class="card inverse mcard" data-a="go" data-p="D">
+      <div class="hd"><span class="ring">${ic('glasses',22)}</span>AR 글라스<i style="position:absolute;right:16px;top:20px;width:7px;height:7px;border-radius:50%;background:var(--signal)"></i></div>
+      <div class="val"><div class="metric-l" style="color:var(--text-inv)">${S.battery}%</div><div class="sub" style="margin-top:6px">배터리 · 연결됨</div></div>
+      <svg width="150" height="40" viewBox="0 0 166 50" style="position:absolute;left:0;bottom:4px"><path d="M6 46 C50 20 110 14 160 16" stroke="#2A2C30" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M6 46 C50 20 100 15 ${30+S.battery*1.25} 15" stroke="#3DDC84" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <button class="card mcard" data-a="go" data-p="M">
+      <div class="hd">${ic('flag',22)}M 시즌</div>
+      <div class="val"><div class="metric-l">10:00</div><div class="sub" style="margin-top:6px">토요일 · R3 ${S.roundJoined?'참가 확정':'영종도'}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">${[0,1,2,3].map(()=>'<i style="width:16px;height:4px;border-radius:2px;background:var(--brand)"></i>').join('')}</div></div>
+    </button>
+    <div class="card mcard">
+      <div class="hd">${ic('pin',22)}차량 위치</div>
+      <div class="val"><div style="font-size:21px;font-weight:300">서울 강남구</div><div class="sub" style="margin-top:4px">마지막 주차 위치</div></div>
+    </div>
+    <button class="card mcard" data-a="sheet" data-p="climate">
+      <div class="hd">${ic('fan',22)}냉난방 타이머</div>
+      <div class="val"><div style="font-size:21px;font-weight:300">${S.climateTimer?S.climateTime+' 출발':'출발 시각 설정'}</div><div class="sub" style="margin-top:4px">${S.climateTimer?S.climateTemp+'°C · 켜짐':'꺼짐'}</div></div>
+      <span class="chev">${ic('chevR',18)}</span>
+    </button>
+  </div>
+  ${h1('차량 상태','전체 보기','sheet','vstatus')}
+  ${list([{i:S.locked?'lock':'unlock',t:S.locked?'잠김':'잠금 해제됨',a:'sheet',p:'vstatus',id:'lockrow'},{i:'tire',t:'타이어 공기압',v:'정상',a:'sheet',p:'tires'},{i:'road',t:'주행 거리',v:'4,449 km',a:'sheet',p:'vstatus'}])}
+  </div>${tabbar(2)}`;
+},
+/* ---------- B · 알림 ---------- */
+B(){
+  const it=(k,i,t,b,time,dest)=>`<button class="row" data-a="notif" data-p="${k}|${dest||''}" style="align-items:flex-start;padding:16px 0">
+    <span style="width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-surface);display:grid;place-items:center;flex:none;position:relative">${ic(i,20)}${!S.read[k]?'<i style="position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--alert);border:2px solid var(--bg-canvas)"></i>':''}</span>
+    <div class="rt"><div class="t" style="display:flex;justify-content:space-between;gap:8px"><span>${t}</span><span class="sub" style="font-weight:400;flex:none">${time}</span></div><div class="s" style="line-height:1.5">${b}</div></div></button>`;
+  return `${header('알림')}<div class="scroll">
+  <div class="overline" style="margin:8px 0 6px">오늘</div>
+  <div class="list">${it('n1','flag',S.roundJoined?'시즌 R3 참가 확정':'시즌 R3 신청이 열렸어요',S.roundJoined?'11.28 (토) 10:00 영종도 · 글라스를 충전해 두세요.':'11.28 (토) 10:00 영종도 · 클래스 B 잔여 4자리','방금','M')}
+  ${it('n2','chart','세션 리포트가 도착했습니다','베스트 1:12.43 · 지난 라운드보다 0.62초 단축','2시간 전','O')}
+  ${it('n3','glasses','AR 글라스 배터리 20%','주행 전 시트의 충전 케이블에 연결해 주세요.','어제','D')}</div>
+  <div class="overline" style="margin:28px 0 6px">이번 주</div>
+  <div class="list">${it('n4','ticket','시뮬레이터 초대권 도착','대리점 시승 첫 랩(1:18.64)이 고스트로 저장되었습니다.','3일 전','J')}
+  ${it('n5','wrench','정기 점검 안내','다음 서비스까지 1,200 km 남았습니다.','5일 전','')}</div>
+  <button class="btn text" data-a="readAll" style="margin-top:16px">모두 읽음으로 표시</button>
+  </div>${tabbar(2)}`;
+},
+/* ---------- C · XREAL M 허브 ---------- */
+C(){
+  const st=['대리점','시뮬레이터','서킷','구매','시즌','업그레이드'];
+  return `<div class="scroll nohead" style="padding-top:52px">
+  <div class="topbar" style="position:relative;top:0;left:0;right:0;margin-bottom:22px"><span class="name">XREAL M</span>
+    <button class="icbtn inv" data-a="go" data-p="B">${ic('bell',22)}${['n1','n2','n3','n4'].some(k=>!S.read[k])?'<i class="dot"></i>':''}</button><button class="icbtn">${ic('user',22)}</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div class="en" style="font-size:38px;line-height:1.12;letter-spacing:-.02em"><b style="font-weight:700">MAXIMUM</b><br><span style="font-weight:300">OF M</span></div>
+    ${img('glassesSmall','글라스 이미지','', 'width:107px;height:90px')}
+  </div>
+  <button class="card inverse" data-a="sheet" data-p="level" style="display:block;width:100%;margin-top:26px;padding:22px 20px">
+    <div style="display:flex;justify-content:space-between"><span class="overline" style="color:var(--text-3)">My Level</span><span class="sub">클래스 B</span></div>
+    <div style="font-size:22px;font-weight:500;margin-top:6px">LV2 · 포인트 코치</div>
+    <div class="level-dots"><span class="fill" style="width:calc(80% - 12px)"></span>${st.map((_,i)=>`<div class="${i<4?'done':i===4?'cur':''}"></div>`).join('')}</div>
+    <div class="level-lbl">${st.map((s,i)=>`<span class="${i===4?'cur':''}">${s}</span>`).join('')}</div>
+    <div class="sub" style="margin:18px 0 10px">다음 레벨까지 — 코너 3곳의 기록을 안정시키세요</div>
+    <div class="bar"><i style="width:64%"></i></div>
+  </button>
+  ${h1('다음 세션','전체 보기','go','M')}
+  <button class="card" data-a="go" data-p="M" style="display:flex;gap:16px;align-items:center;width:100%">
+    <div style="width:64px;height:100px;border-radius:18px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none"><span class="overline" style="font-size:11px">Sat</span><span class="en" style="font-size:34px;font-weight:300">28</span><span class="en sub" style="font-size:11px">NOV</span></div>
+    <div style="flex:1"><div style="font-size:18px;font-weight:500">M 시즌 R3</div><div class="sub" style="font-size:13px;margin:6px 0 12px">영종도 BMW 드라이빙 센터 · 10:00</div>
+    <div class="tags"><span class="tag">클래스 B</span><span class="tag inv">${S.roundJoined?'참가 확정':'신청 가능'}</span></div></div>
+    <span class="chev">${ic('chevR',20)}</span></button>
+  ${h1('XREAL M 서비스')}
+  <div class="grid2">${[['sim','시뮬레이터 예약',S.simBooking?'예약 완료':`초대권 ${S.ticket}장`,'J'],['flag','라운드 참가',S.roundJoined?'R3 · 참가 확정':'R3 · 11.28','M'],['chart','내 기록','베스트 1:12.43','O'],['glasses','글라스 설정',`${S.battery}% · 연결됨`,'D']].map(([k,t,s,d])=>`<button class="card" data-a="go" data-p="${d}" style="height:122px;display:flex;flex-direction:column;justify-content:space-between">${ic(k,26)}<div><div style="font-size:15px;font-weight:500">${t}</div><div class="sub" style="margin-top:3px">${s}</div></div></button>`).join('')}</div>
+  ${S.ticket>0?`<div class="card" style="margin-top:12px;padding:20px">
+    <div style="display:flex;align-items:center;gap:12px">${ic('ticket',26)}<span style="flex:1;font-size:16px;font-weight:500">시뮬레이터 초대권</span>
+    <button class="tag inv" data-a="go" data-p="J" style="height:36px;padding:0 18px">사용하기</button></div>
+    <div class="sub" style="font-size:13px;margin-top:12px">대리점 첫 랩 1:18.64 고스트 포함 · 12.31까지</div></div>`:
+    `<button class="card" data-a="go" data-p="L" style="margin-top:12px;display:flex;align-items:center;gap:12px;width:100%">${ic('ticket',26)}<div style="flex:1"><div style="font-size:16px;font-weight:500">시뮬레이터 예약 티켓</div><div class="sub" style="margin-top:3px">11.${23+S.simDay} (${DAYS[S.simDay]}) ${S.simSlot} · 시뮬레이터 룸 2</div></div><span class="chev">${ic('chevR',20)}</span></button>`}
+  ${h1('최근 세션','리포트','go','O')}
+  <button class="card" data-a="go" data-p="O" style="width:100%;display:flex;justify-content:space-between;align-items:flex-end">
+    <div><div class="sub" style="font-size:13px">11.15 · R2 영종도</div><div class="metric-l" style="margin:8px 0">1:12.43</div><div style="display:flex;gap:12px;align-items:center"><b class="en" style="color:var(--text-accent);font-weight:600;font-size:15px">−0.62s</b><span class="sub">P4 · 클래스 B</span></div></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;height:80px">${[38,30,26,24,20,16].map((h,i)=>`<i style="width:10px;height:${h*2}px;border-radius:3px;background:${i===5?'var(--bg-inverse)':'var(--bg-track)'}"></i>`).join('')}</div>
+  </button>
+  </div>${tabbar(3)}`;
+},
+/* ---------- D · 내 AR 글라스 ---------- */
+D(){
+  const modeLbl={auto:'공도 모드 · 자동 전환',서킷:'서킷 모드 · 수동',공도:'공도 모드 · 수동',시뮬레이터:'시뮬레이터 모드 · 수동'}[S.glassMode];
+  const stat=(v,l,al,en=true)=>`<div style="text-align:${al}"><div class="${en?'en':''}" style="font-size:36px;font-weight:300;letter-spacing:-.02em;line-height:1.1">${v}</div><div class="sub" style="font-size:12px;margin-top:2px">${l}</div></div>`;
+  return `${header('내 AR 글라스')}<div class="scroll">
+  <div class="center" style="margin-top:14px"><button class="tag" data-a="sheet" data-p="mode" style="gap:8px"><i style="width:7px;height:7px;border-radius:50%;background:var(--green)"></i>${modeLbl}</button></div>
+  <div style="display:grid;grid-template-columns:1fr 181px 1fr;gap:8px;align-items:center;margin:20px 0 26px">
+    <div style="display:flex;flex-direction:column;gap:30px">${stat(S.battery+'%','배터리','left')}${stat('M4','차량 연결','left')}</div>
+    ${img('glasses','AR 글라스 제품 이미지','','height:150px')}
+    <div style="display:flex;flex-direction:column;gap:30px">${stat(Math.floor(S.battery/100*2)+':'+String(Math.round((S.battery/100*120)%60)).padStart(2,'0'),'남은 사용 시간','right')}${stat('자동','차광','right',false)}</div>
+  </div>
+  ${list([{i:'eye',t:'착용 중',v:S.iris?'홍채 인증됨':'인증 꺼짐',a:'go',p:'G'}])}
+  ${h1('표시 설정')}
+  ${list([{i:'layout',t:'화면 구성',s:`${S.cluster==='shift'?'시프트 라이트':'3원형 클러스터'} · 구역 A–H`,a:'go',p:'E'},{i:'ghost',t:'코치 · 고스트',s:`코치 ${COACH[S.coach][1]} · 고스트 ${S.ghosts.length}대`,a:'go',p:'F'},{i:'bellA',t:'알림',v:S.notif,a:'sheet',p:'notif'}])}
+  ${h1('기기')}
+  ${list([{i:'lens',t:'보안 · 렌즈',s:`${S.lost?'분실 모드 켜짐':'홍채 등록됨'} · 도수 ${fmtLens(S.lensL)} / ${fmtLens(S.lensR)}`,a:'go',p:'G'},{i:'helmet',t:'헬멧 페어링',v:S.helmet?'연결됨':'연결 안 됨',a:'sheet',p:'helmet'},{i:'plug',t:'충전',v:'시트 케이블',a:'sheet',p:'charge'},{i:'update',t:'소프트웨어',v:'최신',a:'software'}])}
+  </div>${tabbar(2)}`;
+},
+/* ---------- E · 화면 구성 ---------- */
+E(){
+  const Z=ZONES[S.cfgMode];
+  const z=(id,l,x,y,w,h)=>`<button class="zone ${S.zones[id]?'on':'offz'}" data-a="zone" data-p="${id}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${l}</button>`;
+  const opt=(k,t)=>{const on=S.cluster===k;return `<button class="card ${on?'sel':''}" data-a="cluster" data-p="${k}" style="padding:14px 14px 16px">
+    <div class="ar-panel opt-prev">${k==='shift'?`<div style="text-align:center"><span class="en" style="font-size:22px;font-weight:600">182</span> <span class="en" style="font-size:14px;color:var(--text-3)">5</span><div style="display:flex;gap:4px;margin-top:10px">${['#3DDC84','#3DDC84','#3DDC84','#3DDC84','#3DDC84','#F5D547','#F5D547','#F5D547','#E7222E','#E7222E','#2A2C30','#2A2C30'].map(c=>`<i style="width:6px;height:6px;border-radius:50%;background:${c}"></i>`).join('')}</div></div>`:
+    `<div style="display:flex;align-items:center;gap:4px"><i style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8)"></i><span style="width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8);display:grid;place-items:center;font:600 12px var(--font-en)">182</span><i style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8)"></i></div>`}</div>
+    <div style="font-size:15px;font-weight:500">${t}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="sub" style="${on?'color:var(--text-1);font-weight:500':''}">${on?'사용 중':'선택'}</span><span class="radio ${on?'on':''}">${on?ic('check',16,2.2):''}</span></div></button>`;};
+  return `${header('화면 구성')}<div class="scroll">
+  <div class="seg" style="margin-top:14px">${['서킷','공도','시뮬레이터'].map(m=>`<button class="${S.cfgMode===m?'on':''}" data-a="cfgMode" data-p="${m}">${m}</button>`).join('')}</div>
+  ${arView(S.cfgMode,z,false)}
+  <p class="body2" style="margin-top:12px">구역을 눌러 켜고 끌 수 있어요. 위치는 고정되어, 시뮬레이터에서 익힌 시선이 서킷까지 이어집니다.</p>
+  ${h1('핸들 위 표시')}
+  <div class="grid2" id="optgrid">${opt('shift','시프트 라이트')}${opt('dial','3원형 클러스터')}</div>
+  ${h1('항상 표시')}
+  ${list([{i:'gauge',t:'A · 속도 · 기어',v:'항상',lock:true,a:'lockedZone',p:'A · 속도 · 기어'},{i:'bellA',t:'E · 안전 알림',v:'항상',lock:true,a:'lockedZone',p:'E · 안전 알림'}])}
+  ${h1('구역',S.cfgMode+' 모드')}
+  ${list(Object.entries(Z).map(([id,[i,t,s]])=>({i,t,s,toggle:S.zones[id],a:'zone',p:id,id:'zr-'+id})))}
+  </div>${tabbar(2)}`;
+},
+/* ---------- F · 코치 · 고스트 ---------- */
+F(){
+  const lv={auto:'LV2 · 포인트만',lv1:'LV1 · 풀 가이드',lv2:'LV2 · 포인트만',eng:'엔지니어'}[S.coach];
+  const op={auto:1,lv1:0,lv2:1,eng:2}[S.coach];
+  return `${header('코치 · 고스트')}<div class="scroll">
+  <div class="card inverse" style="margin-top:14px;padding:22px 20px">
+    <div class="sub">지금 코치 단계</div><div style="font-size:22px;font-weight:500;margin:4px 0 6px">${lv}</div><div class="sub">실력이 오를수록 화면의 가이드가 줄어듭니다.</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px">${[['LV1',5],['LV2',3],['ENG',1]].map(([l,n],i)=>`<div><div style="display:flex;flex-direction:column-reverse;gap:3px;height:38px">${Array.from({length:5},(_,j)=>`<i style="height:4px;border-radius:2px;background:#fff;opacity:${j<n?.9:.12}"></i>`).join('')}</div><div class="en" style="font-size:10px;font-weight:600;margin-top:8px;color:${i===op?'#fff':'#5C5F63'}">${l}</div></div>`).join('')}</div>
+  </div>
+  ${h1('코치 레벨')}
+  ${list(Object.entries(COACH).map(([k,[i,t,s]])=>({i,t,s,radio:S.coach===k,a:'coach',p:k})))}
+  ${h1('고스트','최대 2대')}
+  ${list(Object.entries(GHOSTS).map(([k,[i,t,v]])=>({i,t,v,radio:S.ghosts.includes(k),a:'ghost',p:k})))}
+  ${h1('레이스 엔지니어')}
+  ${list([{i:'voice',t:'골전도 음성',s:'직선 구간에서만 전달',toggle:S.voice,a:'toggle',p:'voice|골전도 음성'},{i:'board',t:'피트 보드',s:'측면 창 · 메인 스트레이트',toggle:S.pitboard,a:'toggle',p:'pitboard|피트 보드'}])}
+  </div>${tabbar(2)}`;
+},
+/* ---------- G · 보안 · 렌즈 ---------- */
+G(){
+  return `${header('보안 · 렌즈')}<div class="scroll">
+  <div class="center" style="margin-top:20px"><div style="width:120px;height:120px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border);display:grid;place-items:center;margin:0 auto;box-shadow:var(--shadow);color:${S.lost?'var(--alert)':'var(--text-1)'}">${ic(S.lost?'shield':'eye',64,1.1)}</div>
+  <div style="font-size:18px;font-weight:500;margin-top:16px">${S.lost?'분실 모드':'홍채 인증'}</div><div class="sub" style="font-size:13px;margin-top:4px">${S.lost?'글라스가 원격으로 잠겨 있습니다':'등록됨 · '+S.irisDate}</div></div>
+  ${h1('보안')}
+  ${list([{i:'eye',t:'홍채로 차 열기 · 시동',s:'글라스를 쓰고 차를 보면 해제',toggle:S.iris,a:'toggle',p:'iris|홍채로 차 열기'},{i:'lock',t:'분실 모드',s:S.lost?'켜짐 · 글라스 잠김':'원격으로 글라스 잠금',a:'sheet',p:'lost',v:S.lost?'켜짐':''},{i:'update',t:'홍채 다시 등록',a:'sheet',p:'iris'}])}
+  ${h1('렌즈 · 도수')}
+  <button class="card" data-a="sheet" data-p="lens" style="display:flex;width:100%;padding:22px 20px">
+    <div style="flex:1"><div class="metric-l">${fmtLens(S.lensL)}</div><div class="sub" style="margin-top:6px">좌</div></div><i style="width:1px;background:var(--border)"></i>
+    <div style="flex:1;padding-left:20px"><div class="metric-l">${fmtLens(S.lensR)}</div><div class="sub" style="margin-top:6px">우</div></div></button>
+  <p class="body2" style="margin:16px 0 18px">${S.lensReq?`도수 변경이 신청되었습니다 · ${S.lensReq}`:'도수 렌즈는 BMW 서비스 센터에서 교체합니다. 차량 점검과 함께 예약할 수 있어요.'}</p>
+  <button class="btn primary" data-a="lensGo" data-p="0">도수 변경 신청</button>
+  <button class="btn secondary" data-a="lensGo" data-p="1">서비스 예약과 함께 방문</button>
+  <div style="margin-top:20px">${list([{i:'wrench',t:'AS 신청',s:'글라스 · 헬멧 충전부',a:'sheet',p:'as'}])}</div>
+  </div>${tabbar(2)}`;
+},
+/* ---------- H · 도수 변경 신청 ---------- */
+H(){
+  return `${header('도수 변경 신청')}<div class="scroll">
+  <div class="card" style="margin-top:14px;display:flex;align-items:center">
+    <div style="flex:1"><div class="sub" style="font-size:13px">새 도수</div><div style="font-size:17px;font-weight:500;margin-top:4px">좌 ${fmtLens(S.lensL)}  ·  우 ${fmtLens(S.lensR)}</div></div>
+    <button class="tag" data-a="sheet" data-p="lens" style="color:var(--text-accent)">변경</button></div>
+  ${h1('방문할 서비스 센터')}
+  ${list(Object.entries(CENTERS).map(([k,s])=>({i:'pin',t:'BMW 서비스 센터 '+k,s,radio:S.center===k,a:'center',p:k})))}
+  ${h1('방문 날짜','2026년 11월')}
+  ${dateChips(S.lensDay,'lensDay')}
+  ${h1('시간')}
+  ${slotGrid([['10:00','2자리'],['11:00','off'],['13:00','1자리'],['14:00','2자리'],['15:00','3자리'],['16:00','off']],S.lensTime,'lensTime')}
+  <div style="margin-top:20px">${list([{i:'wrench',t:'차량 점검 함께 받기',s:'다음 서비스까지 1,200 km',toggle:S.withService,a:'toggle',p:'withService|차량 점검 함께 받기'}])}</div>
+  <p class="body2" style="margin:16px 0 20px">새 렌즈는 방문 당일 교체되며 약 30분 걸립니다. 비용은 방문 시 안내됩니다.</p>
+  <button class="btn primary" data-a="lensSubmit">신청하기</button>
+  </div>${tabbar(2)}`;
+},
+/* ---------- I · 신청 완료 ---------- */
+I(){
+  return `${header('',false)}<div class="scroll">
+  <div class="done-icon">${ic('check',40,2.2)}</div>
+  <div class="center" style="font-size:24px;font-weight:500">신청이 완료되었어요</div>
+  <div class="center sub" style="font-size:14px;margin:8px 0 28px">방문 하루 전에 알림을 보내 드릴게요.</div>
+  ${list([{i:'pin',t:'BMW 서비스 센터 '+S.center,none:true},{i:'cal',t:`11월 ${23+S.lensDay}일 (${DAYS[S.lensDay]}) ${S.lensTime}`,none:true},{i:'wrench',t:'차량 점검 함께',v:S.withService?'포함':'미포함',none:true},{i:'glasses',t:'도수 변경',v:`좌 ${fmtLens(S.lensL)} · 우 ${fmtLens(S.lensR)}`,none:true}])}
+  <button class="btn primary" data-a="reset" data-p="A,D" style="margin-top:28px">확인</button>
+  <button class="btn text" data-a="cancelLens">신청 취소</button>
+  </div>${tabbar(2)}`;
+},
+/* ---------- J · 프로그램 ---------- */
+J(){
+  const used=S.ticket===0;
+  return `${header('프로그램')}<div class="scroll">
+  <div class="card" style="margin-top:14px;display:flex;gap:14px;align-items:center">${ic('ticket',26)}<div><div style="font-size:16px;font-weight:500">${used?'초대권 사용 완료':'초대권 1장 사용 가능'}</div><div class="sub" style="margin-top:3px">${used?'시뮬레이터 예약에 사용되었습니다':'대리점 첫 랩 1:18.64 고스트가 연결됩니다'}</div></div></div>
+  <div style="font-size:22px;font-weight:500;margin:30px 0 4px">M of M 성장 사다리</div><div class="sub" style="font-size:13px;margin-bottom:20px">한 칸씩, 같은 트랙 · 같은 코치 · 같은 기록으로</div>
+  <div class="ladder">
+    <button class="step card" data-a="toastMsg" data-p="11.15 대리점 몰입형 시승 완료 · 첫 랩 1:18.64" style="width:100%"><span class="lnode done">${ic('check',14,2.4)}</span>
+      <div style="display:flex;justify-content:space-between"><span class="overline" style="font-size:11px">01</span><span class="sub">완료</span></div><div style="font-size:17px;font-weight:500;margin:6px 0">대리점 몰입형 시승</div><div class="sub">11.15 완료 · 첫 랩 1:18.64</div></button>
+    <div class="step card inverse"><span class="lnode next"></span>
+      <span class="overline" style="font-size:11px;color:var(--text-3)">02</span><div style="font-size:17px;font-weight:500;margin:6px 0">실내 시뮬레이터</div><div class="sub">실제 차 안에서 가상 영종도 트랙 · 90분</div>
+      <span class="tag" style="background:var(--graphite);color:#fff;border:0;margin:14px 0">${used?'예약 완료':'초대권 · 무료'}</span>
+      <button class="btn" data-a="go" data-p="${S.simBooking?'L':'K'}" style="background:#fff;color:#0B0B0D;height:44px">${S.simBooking?'예약 티켓 보기':'일정 선택'}</button></div>
+    <button class="step card" data-a="toastMsg" data-p="시뮬레이터를 수료하면 서킷 AR 코칭이 열려요|warn" style="width:100%"><span class="lnode"></span>
+      <div style="display:flex;justify-content:space-between"><span class="overline" style="font-size:11px;color:var(--text-3)">03</span><span class="chev">${ic('lock',18)}</span></div><div style="font-size:17px;font-weight:500;margin:6px 0;color:var(--text-2)">서킷 AR 코칭</div><div class="sub">실제 서킷 첫 주행 · 인스트럭터 동승</div></button>
+    <button class="step card" data-a="toastMsg" data-p="M 시즌 멤버십은 M 오너 전용이에요 · 차량 등록 후 열려요|warn" style="width:100%"><span class="lnode"></span>
+      <div style="display:flex;justify-content:space-between"><span class="overline" style="font-size:11px;color:var(--text-3)">04</span><span class="chev">${ic('lock',18)}</span></div><div style="font-size:17px;font-weight:500;margin:6px 0;color:var(--text-2)">M 시즌 멤버십</div><div class="sub">라운드 · 클래스 · 고스트 경쟁</div></button>
+  </div>
+  </div>${tabbar(3)}`;
+},
+/* ---------- K · 시뮬레이터 예약 ---------- */
+K(){
+  return `${header('시뮬레이터 예약')}<div class="scroll">
+  ${img('simRoom','시뮬레이터 룸 이미지','', 'height:150px;margin-top:14px;border-radius:28px')}
+  <div style="font-size:18px;font-weight:500;margin-top:16px">영종도 BMW 드라이빙 센터</div><div class="sub" style="font-size:13px;margin-top:4px">시뮬레이터 룸 · 실제 M 차량 · 90분</div>
+  ${h1('날짜','2026년 11월')}
+  ${dateChips(S.simDay,'simDay')}
+  ${h1('세션')}
+  ${slotGrid([['09:30','2자리'],['11:00','1자리'],['14:00','off'],['16:30','3자리'],['18:00','4자리'],['19:30','4자리']],S.simSlot,'simSlot')}
+  <div style="margin-top:22px">${list([{i:'glasses',t:'내 글라스 사용',s:'내 화면 구성 · 코치 레벨 적용',toggle:S.simGlasses,a:'toggle',p:'simGlasses|내 글라스 사용'},{i:'ghost',t:'고스트',v:S.simGhost,a:'sheet',p:'simGhost'},{i:'gauge',t:'코치 레벨',v:S.simCoach,a:'sheet',p:'simCoach'}])}</div>
+  <div class="card" style="margin:20px 0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:15px;font-weight:500">${S.ticket>0?'초대권 1장 사용':'일반 예약'}</span><b style="font-size:17px;font-weight:500">${S.ticket>0?'0원':'120,000원'}</b></div>
+  <button class="btn primary" data-a="simSubmit">예약하기</button>
+  </div>${tabbar(3)}`;
+},
+/* ---------- L · 예약 완료 ---------- */
+L(){
+  const b=S.simBooking||{day:S.simDay,slot:S.simSlot,ghost:S.simGhost,coach:S.simCoach};
+  const qr=Array.from({length:81},(_,i)=>((i*7+i%9*3)%5<2||[0,1,2,9,11,18,19,20,6,7,8,15,17,24,25,26,54,55,56,63,65,72,73,74].includes(i))?'<i></i>':'<i class="w"></i>').join('');
+  return `${header('예약 완료',false)}<div class="scroll">
+  <div style="font-size:24px;font-weight:500;margin-top:16px">예약이 확정되었어요</div><div class="sub" style="font-size:14px;margin:6px 0 20px">센터 입구에서 QR을 보여주세요.</div>
+  <div class="card inverse ticket">
+    <span class="overline" style="color:var(--text-3)">Simulator Session</span>
+    <div style="font-size:26px;font-weight:500;margin-top:6px">11.${23+b.day} (${DAYS[b.day]})</div><div class="metric-l" style="margin:4px 0 10px">${b.slot}</div>
+    <div class="sub">영종도 BMW 드라이빙 센터 · 시뮬레이터 룸 2</div>
+    <div style="border-top:1px dashed rgba(255,255,255,.2);margin:22px -4px"></div><span class="cut" style="left:-12px"></span><span class="cut" style="right:-12px"></span>
+    <div style="display:flex;gap:20px"><div class="qr">${qr}</div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span class="sub" style="font-size:12px">고스트</span><span style="font-size:14px;font-weight:500;line-height:1.4">${b.ghost.replace(' 1:','<br>1:')}</span><span class="sub" style="font-size:12px;margin-top:8px">코치</span><span style="font-size:14px;font-weight:500">${b.coach}</span></div></div>
+  </div>
+  ${h1('준비하기')}
+  ${list([{i:'plug',t:'글라스 충전',v:S.battery+'%',vok:true,a:'toastMsg',p:`현재 배터리 ${S.battery}% · 세션 전 시트 케이블로 충전하세요`},{i:'layout',t:'화면 구성 확인',s:`${S.cluster==='shift'?'시프트 라이트':'3원형 클러스터'} · 구역 A–H`,a:'go',p:'E'},{i:'cal',t:'캘린더에 추가',a:'toastMsg',p:'캘린더에 추가되었습니다'}])}
+  <button class="btn primary" data-a="reset" data-p="C" style="margin-top:28px">XREAL M 홈으로</button>
+  <button class="btn text" data-a="sheet" data-p="cancelSim">예약 취소</button>
+  </div>${tabbar(3)}`;
+},
+/* ---------- M · 라운드 상세 ---------- */
+M(){
+  const sc=[['09:30','도착 · 글라스 착용','홍채로 차량 해제'],['10:00','브리핑','오늘의 목표 코너와 고스트'],['10:30','세션 1 · 20분','AR 코칭 · 엔지니어 무전'],['11:30','피트 리뷰','홀로그램 랩 리플레이'],['13:00','세션 2 · 20분','고스트 랩타임 경쟁'],['14:30','시즌 순위 발표','클래스 순위 · 다음 라운드']];
+  return `${header('M 시즌')}<div class="scroll">
+  ${img('track','영종도 트랙맵 / 서킷 이미지','','height:190px;margin-top:14px;border-radius:28px')}
+  <div class="overline" style="margin-top:22px">Round 3</div><div style="font-size:22px;font-weight:500;margin:4px 0 14px">영종도 BMW 드라이빙 센터</div>
+  <div class="tags"><span class="tag">11.28 (토) 10:00</span><span class="tag inv">클래스 B</span><span class="tag">${S.roundJoined?'참가 확정':'잔여 4자리'}</span></div>
+  <div class="card inverse" style="margin-top:20px;padding:20px">
+    <div class="sub">이번 라운드 목표</div>
+    ${[['T3','브레이킹 포인트 5m 늦추기','−0.31s'],['T7','에이펙스 속도 +3 km/h','−0.28s']].map(([c,t,d])=>`<div style="display:flex;align-items:center;gap:12px;margin-top:14px"><span class="en" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.5);display:grid;place-items:center;font-size:12px;font-weight:600">${c}</span><span style="flex:1;font-size:15px;font-weight:500">${t}</span><span class="en" style="color:var(--green);font-weight:600;font-size:13px">${d}</span></div>`).join('')}
+  </div>
+  ${h1('일정')}
+  <div class="card timeline">${sc.map(([t,a,b],i)=>`<div class="ti"><span class="tm">${t}</span><span class="pt ${i===0?'on':''}"></span><div><div style="font-size:15px;font-weight:500">${a}</div><div class="sub" style="margin-top:3px">${b}</div></div></div>`).join('')}</div>
+  ${h1('라운드 규칙')}
+  ${list([{i:'ghost',t:'고스트 랩타임 경쟁',s:'차량 간 접촉 없는 기록 경쟁',none:true},{i:'voice',t:'레이스 엔지니어',v:'1:4 배정',none:true},{i:'glasses',t:'필요 장비',v:'내 AR 글라스 · 헬멧',none:true}])}
+  <div style="margin-top:28px">${S.roundJoined?`<button class="btn primary" data-a="go" data-p="N">참가 확인서 보기</button><button class="btn secondary" data-a="sheet" data-p="cancelRound">참가 취소</button>`:`<button class="btn primary" data-a="joinRound">참가 신청</button>`}
+  <button class="btn ${S.roundJoined?'text':'secondary'}" data-a="go" data-p="E">글라스 화면 미리 설정</button></div>
+  </div>${tabbar(3)}`;
+},
+/* ---------- N · 참가 확정 ---------- */
+N(){
+  return `${header('',false)}<div class="scroll">
+  <div class="done-icon">${ic('flag',36,1.8)}</div>
+  <div class="center" style="font-size:22px;font-weight:500">라운드 3 참가가 확정되었어요</div>
+  <div class="center sub" style="font-size:14px;margin:8px 0 28px">클래스 B · 레이스 엔지니어가 배정되었습니다.</div>
+  ${list([{i:'cal',t:'11월 28일 (토) 10:00',none:true},{i:'pin',t:'영종도 BMW 드라이빙 센터',none:true},{i:'ghost',t:'고스트',v:S.ghosts.map(g=>GHOSTS[g][1]).join(' · ')||'없음',a:'go',p:'F'}])}
+  <div style="margin-top:28px"><button class="btn secondary" data-a="go" data-p="E">글라스 화면 미리 설정</button><button class="btn primary" data-a="reset" data-p="C">XREAL M 홈으로</button></div>
+  </div>${tabbar(3)}`;
+},
+/* ---------- O · 세션 리포트 ---------- */
+O(){
+  const laps=[75.2,74.1,73.6,73.05,72.9,72.43,72.7,73.1];
+  const cr=[['T1','진입 속도 유지',+0.05,'코너 진입 속도는 좋았지만 탈출에서 0.05초를 잃었어요. 스로틀을 조금 더 일찍 여세요.'],['T3','브레이킹 5m 늦춤',-0.31,'브레이킹 포인트를 5m 늦춰 0.31초를 줄였어요. 다음 목표는 트레일 브레이킹입니다.'],['T5','라인이 넓음',+0.12,'에이펙스를 1m 놓쳐 라인이 넓어졌어요. LV2 가이드의 에이펙스 포인트를 보세요.'],['T7','에이펙스 속도 상승',-0.28,'에이펙스 속도가 3 km/h 올라 0.28초를 줄였어요.']];
+  return `${header('세션 리포트')}<div class="scroll">
+  <div class="sub" style="font-size:13px;margin-top:14px">R2 · 11.15 · 영종도</div>
+  <div class="overline" style="margin-top:10px">Best Lap</div><div class="metric-xl" style="margin:6px 0 16px">1:12.43</div>
+  <div class="tags"><span class="tag inv">−0.62s 지난 라운드 대비</span><span class="tag">P4 / 18 · 클래스 B</span></div>
+  <div class="card" style="margin-top:20px">
+    <div style="display:flex;justify-content:space-between"><b style="font-weight:500">랩 기록</b><span class="sub">8랩</span></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;height:130px;margin-top:12px">${laps.map((v,i)=>`<button data-a="toastMsg" data-p="LAP ${i+1} · ${Math.floor(v/60)}:${(v%60).toFixed(2).padStart(5,'0')}" style="width:28px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">${i===5?'<span class="en" style="font-size:11px;font-weight:600">1:12.43</span>':''}<i style="width:24px;height:${(76-v)*26+16}px;border-radius:6px;background:${i===5?'var(--bg-inverse)':'var(--bg-track)'}"></i><span class="en sub" style="font-size:11px">${i+1}</span></button>`).join('')}</div>
+  </div>
+  <div class="ar-panel replay" style="margin-top:20px">
+    <span class="lbl">PIT REPLAY · LAP 6</span>
+    <svg class="track" viewBox="0 0 345 190" fill="none"><path id="trk" d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#2A2C30" stroke-width="14" stroke-linejoin="round"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#81C4FF" stroke-width="2" stroke-dasharray="4 4" opacity=".8"/><path d="M60 140 C40 100 70 50 120 55 C160 60 170 95 210 90 C250 85 260 40 300 55 C330 70 320 130 280 145 C230 160 120 165 60 140 Z" stroke="#fff" stroke-width="1.5" opacity=".8"/><circle id="car1" r="5" fill="#fff"/><circle id="car2" r="5" fill="#81C4FF"/></svg>
+    <button class="playbtn" data-a="replay" id="playbtn">${ic('play',24)}</button>
+    <div class="prog"><i id="replayProg"></i></div>
+  </div>
+  ${h1('코너별 분석')}
+  <div class="list">${cr.map(([c,t,d,desc],i)=>`<button class="row" data-a="sheet" data-p="corner|${i}"><span class="en" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border-strong);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none">${c}</span><div class="rt"><div class="t">${t}</div></div><span class="dbar"><i style="${d<0?`right:50%;width:${Math.abs(d)*110}px;background:var(--brand)`:`left:50%;width:${d*110}px;background:var(--amber)`}"></i></span><span class="en" style="width:58px;text-align:right;font-weight:600;font-size:13px;color:${d<0?'var(--text-accent)':'var(--alert)'}">${d<0?'−':'+'}${Math.abs(d).toFixed(2)}s</span></button>`).join('')}</div>
+  <div class="card inverse" style="margin-top:24px;display:flex;gap:14px;padding:20px">${ic('trophy',28)}<div><div style="font-size:17px;font-weight:500">LV2 달성 · 포인트 코치</div><div class="sub" style="margin-top:6px;line-height:1.5">다음 세션부터 라인 가이드가 사라지고<br>브레이킹 포인트와 에이펙스만 표시됩니다.</div></div></div>
+  <div style="margin-top:24px"><button class="btn primary" data-a="go" data-p="P">시즌 순위 보기</button><button class="btn secondary" data-a="go" data-p="M">${S.roundJoined?'R3 라운드 보기':'R3 신청하기'}</button></div>
+  </div>${tabbar(3)}`;
+},
+/* ---------- P · 시즌 순위 ---------- */
+P(){
+  const B=[['1','Apex_K','M3 Competition','1:11.72',''],['2','NightM3','M3 Touring','1:11.95','+0.23'],['3','S58_Lee','M4 Competition','1:12.25','+0.53'],['4','나','M4 Competition','1:12.43','+0.71'],['5','Redline_J','M2','1:12.80','+1.08'],['6','Ring_Park','M3 Competition','1:13.02','+1.30'],['7','LateApex','M4 CSL','1:13.11','+1.39'],['8','Hana_M','M2','1:13.40','+1.68']];
+  const ALL=[['1','Corsa_V','M4 CSL','1:09.88','A'],['2','Kim_GT','M4 Competition','1:10.21','A'],['3','Track_Dad','M3 CS','1:10.64','A'],['4','Apex_K','M3 Competition','1:11.72','B'],['5','NightM3','M3 Touring','1:11.95','B'],['6','S58_Lee','M4 Competition','1:12.25','B'],['7','나','M4 Competition','1:12.43','B'],['8','Redline_J','M2','1:12.80','B']];
+  const data=S.standTab==='B'?B:ALL;
+  return `${header('시즌 순위')}<div class="scroll">
+  <div class="seg" style="margin-top:14px"><button class="${S.standTab==='B'?'on':''}" data-a="standTab" data-p="B">클래스 B</button><button class="${S.standTab==='ALL'?'on':''}" data-a="standTab" data-p="ALL">전체</button></div>
+  <div class="card inverse" style="margin-top:20px;padding:20px">
+    <div class="sub">2026 SEASON · 내 순위</div>
+    <div style="display:flex;align-items:center;gap:18px;margin-top:4px"><span class="metric-xl">${S.standTab==='B'?'P4':'P7'}</span><div style="flex:1"><div class="en" style="font-size:16px;font-weight:500">24 pts</div><div style="font-size:13px;color:var(--green);margin-top:4px">P3까지 0.18s</div></div><span class="sub">R1 P7 → R2 P4</span></div>
+  </div>
+  ${h1(S.standTab==='B'?'클래스 B · 18명':'전체 · 52명')}
+  <div class="card" style="padding:8px">${data.map(([p,n,c,t,g])=>`<button class="standing ${n==='나'?'me':''}" data-a="toastMsg" data-p="${n==='나'?'내 베스트 랩 1:12.43 · R2':n+' · '+c+' · 베스트 '+t}" style="width:100%"><span class="p">${p}</span><div style="flex:1"><div style="font-weight:500">${n}</div><div class="en sub" style="font-size:12px;margin-top:2px">${c}</div></div><div style="text-align:right"><div class="en" style="font-weight:500">${t}</div><div class="en sub" style="font-size:12px;margin-top:2px">${S.standTab==='B'?(g||'—'):'클래스 '+g}</div></div></button>`).join('')}</div>
+  <p class="body2" style="margin:14px 0 20px">고스트 랩타임 경쟁 · 차량 간 접촉 없음</p>
+  <button class="btn primary" data-a="go" data-p="M">다음 라운드 R3 보기</button>
+  </div>${tabbar(3)}`;
+}
+};
+
+/* =========================================================
+   SHEETS
+   ========================================================= */
+const opt=(on,label,a,p,sub='')=>`<button class="row" data-a="${a}" data-p="${p}"><div class="rt"><div class="t">${label}</div>${sub?`<div class="s">${sub}</div>`:''}</div><span class="radio ${on?'on':''}">${on?ic('check',16,2.2):''}</span></button>`;
+const SHEETS={
+  climate:()=>`<h2>냉난방 타이머</h2><p class="desc">출발 시각에 맞춰 실내 온도를 미리 맞춥니다.</p>
+    ${list([{i:'fan',t:'타이머 사용',toggle:S.climateTimer,a:'toggle',p:'climateTimer|냉난방 타이머'}])}
+    <div class="overline" style="margin:20px 0 10px">출발 시각</div>
+    <div class="slots">${['07:00','07:30','08:00','08:30','09:00','18:30'].map(t=>`<button class="slot ${S.climateTime===t?'on':''}" data-a="pick" data-p="climateTime|${t}"><b>${t}</b></button>`).join('')}</div>
+    <div class="overline" style="margin:20px 0 10px">온도</div>
+    <div class="stepper"><button data-a="temp" data-p="-1">−</button><span class="metric-l" style="flex:1;text-align:center">${S.climateTemp}°C</span><button data-a="temp" data-p="1">+</button></div>
+    <div class="acts"><button class="btn primary" data-a="climateSave">저장</button></div>`,
+  vstatus:()=>`<h2>차량 상태</h2><p class="desc">차량에서 업데이트됨 · 2026. 11. 22. 오전 9:40</p>
+    ${list([{i:S.locked?'lock':'unlock',t:'도어',v:S.locked?'잠김':'잠금 해제됨',none:true},{i:'door',t:'창문 · 선루프',v:'닫힘',none:true},{i:'car',t:'트렁크',v:'닫힘',none:true},{i:'road',t:'주행 거리',v:'4,449 km',none:true},{i:'wrench',t:'다음 서비스',v:'1,200 km 후',none:true}])}
+    <div class="acts"><button class="btn primary" data-a="remote" data-p="${S.locked?'unlock':'lock'}">${S.locked?'원격 잠금 해제':'원격 잠금'}</button></div>`,
+  tires:()=>`<h2>타이어 공기압</h2><p class="desc">권장 압력 · 앞 37.7 psi · 뒤 37.7 psi</p>
+    <div class="grid2">${[['앞 왼쪽','37.4'],['앞 오른쪽','37.6'],['뒤 왼쪽','37.5'],['뒤 오른쪽','37.8']].map(([l,v])=>`<div class="card"><div class="sub">${l}</div><div class="metric-l" style="margin-top:8px">${v}<span style="font-size:14px"> psi</span></div></div>`).join('')}</div>
+    <p class="body2" style="margin-top:14px">서킷 주행 전에는 냉간 기준 압력을 다시 확인하세요.</p>`,
+  level:()=>`<h2>M of M 레벨</h2><p class="desc">대리점 → 시뮬레이터 → 서킷 → 구매 → 시즌 → 업그레이드. 같은 트랙, 같은 코치, 같은 기록으로 한 칸씩 올라갑니다.</p>
+    ${list([{i:'check',t:'대리점 몰입형 시승',v:'완료',none:true},{i:'check',t:'실내 시뮬레이터',v:'수료',none:true},{i:'check',t:'서킷 AR 코칭',v:'수료',none:true},{i:'check',t:'구매 · 글라스 등록',v:'완료',none:true},{i:'flag',t:'M 시즌',s:'코너 3곳 기록 안정 시 LV3',v:'진행 중',vok:true,none:true}])}
+    <div class="acts"><button class="btn primary" data-a="sheetGo" data-p="O">내 기록 보기</button></div>`,
+  mode:()=>`<h2>디스플레이 모드</h2><p class="desc">장소와 차량 연결에 따라 자동으로 바뀝니다. 수동으로 고정할 수도 있어요.</p>
+    ${[['auto','자동 전환','위치 · 페어링 기준'],['서킷','서킷',''],['공도','공도',''],['시뮬레이터','시뮬레이터','']].map(([k,l,s])=>opt(S.glassMode===k,l,'pick',`glassMode|${k}|디스플레이 모드가 ${l}${josa(l,'으로','로')} 바뀌었습니다`,s)).join('')}`,
+  notif:()=>`<h2>글라스 알림</h2><p class="desc">안전 알림은 항상 표시됩니다.</p>
+    ${[['최소','안전 · 차량 이상만'],['표준','+ 엔지니어 메시지 · 깃발'],['전체','+ 랩 델타 · 순위 변동']].map(([k,s])=>opt(S.notif===k,k,'pick',`notif|${k}|알림 범위가 ${k}${josa(k,'으로','로')} 바뀌었습니다`,s)).join('')}`,
+  helmet:()=>`<h2>헬멧 페어링</h2><p class="desc">헬멧 템플 홈에 글라스를 끼우면 자동으로 연결되고 충전됩니다.</p>
+    ${list([{i:'helmet',t:'BMW M 레이싱 헬멧',s:S.helmet?'연결됨 · 충전부 정상':'연결 안 됨',none:true}])}
+    <div class="acts"><button class="btn ${S.helmet?'secondary':'primary'}" data-a="helmet">${S.helmet?'연결 해제':'다시 연결'}</button></div>`,
+  charge:()=>`<h2>충전</h2><p class="desc">오른쪽 다리 배터리 · 약 2시간 사용</p>
+    <div class="card"><div class="sub">현재</div><div class="metric-l" style="margin:6px 0 12px">${S.battery}%</div><div class="progress" style="margin:0"><i style="width:${S.battery}%"></i></div></div>
+    ${list([{i:'plug',t:'시트 케이블',s:'운전석 헤드레스트 자석 무선 충전',none:true},{i:'helmet',t:'헬멧 충전부',s:'헬멧 템플 홈에 끼우면 충전',none:true}])}`,
+  lost:()=>`<h2>분실 모드</h2><p class="desc">${S.lost?'분실 모드를 끄면 홍채 인증으로 다시 사용할 수 있습니다.':'글라스를 원격으로 잠그고 차량 키 기능을 멈춥니다. 마지막 위치는 서비스 센터에 공유됩니다.'}</p>
+    <div class="acts"><button class="btn primary" data-a="lost" style="${S.lost?'':'background:var(--alert)'}">${S.lost?'분실 모드 끄기':'분실 모드 켜기'}</button><button class="btn secondary" data-a="closeSheet">취소</button></div>`,
+  iris:()=>`<h2>홍채 다시 등록</h2><p class="desc">글라스를 쓰고 정면의 점을 바라봐 주세요. 약 10초 걸립니다.</p>
+    <div class="center"><div style="width:120px;height:120px;border-radius:50%;border:1px solid var(--border);display:grid;place-items:center;margin:10px auto;background:var(--bg-surface)" id="irisEye">${ic('eye',64,1.1)}</div></div>
+    <div class="progress"><i id="irisProg"></i></div><p class="center sub" id="irisMsg">준비되면 시작을 누르세요</p>
+    <div class="acts"><button class="btn primary" data-a="irisStart" id="irisBtn">시작</button></div>`,
+  as:()=>`<h2>AS 신청</h2><p class="desc">증상을 선택하면 가까운 서비스 센터로 접수됩니다.</p>
+    ${[['display','디스플레이 · 화면 이상'],['battery','배터리 · 충전 이상'],['helmet','헬멧 충전부 이상'],['etc','기타']].map(([k,l])=>opt(S.asType===k,l,'pick',`asType|${k}|`)).join('')}
+    <div class="acts"><button class="btn primary" data-a="asSubmit" ${S.asType?'':'disabled'}>접수하기</button></div>`,
+  lens:()=>`<h2>새 도수 입력</h2><p class="desc">안경점 처방전 기준으로 입력해 주세요.</p>
+    ${[['lensL','좌'],['lensR','우']].map(([k,l])=>`<div class="card" style="margin-bottom:10px;display:flex;align-items:center"><span style="width:40px;font-weight:500">${l}</span><div class="stepper" style="flex:1"><button data-a="lensStep" data-p="${k}|-0.25">−</button><span class="metric-l" style="flex:1;text-align:center">${fmtLens(S[k])}</span><button data-a="lensStep" data-p="${k}|0.25">+</button></div></div>`).join('')}
+    <div class="acts"><button class="btn primary" data-a="lensSave">적용</button></div>`,
+  simGhost:()=>`<h2>고스트 선택</h2><p class="desc">시뮬레이터에서 함께 달릴 기록입니다.</p>
+    ${['대리점 첫 랩 1:18.64','내 베스트 1:12.43','클래스 1위 1:11.72','고스트 없음'].map(k=>opt(S.simGhost===k,k,'pick',`simGhost|${k}|고스트를 ${k.split(' 1:')[0]}${josa(k.split(' 1:')[0],'으로','로')} 설정했습니다`)).join('')}`,
+  simCoach:()=>`<h2>코치 레벨</h2><p class="desc">시뮬레이터에서 사용할 가이드 수준입니다.</p>
+    ${['LV1 · 자동','LV1 · 풀 가이드','LV2 · 포인트만','엔지니어'].map(k=>opt(S.simCoach===k,k,'pick',`simCoach|${k}|코치 레벨을 ${k}${josa(k,'으로','로')} 설정했습니다`)).join('')}`,
+  cancelSim:()=>`<h2>예약을 취소할까요?</h2><p class="desc">초대권은 다시 사용할 수 있도록 돌려드립니다.</p><div class="acts"><button class="btn primary" data-a="cancelSim" style="background:var(--alert)">예약 취소</button><button class="btn secondary" data-a="closeSheet">유지</button></div>`,
+  cancelRound:()=>`<h2>참가를 취소할까요?</h2><p class="desc">라운드 3일 전까지는 취소 수수료가 없습니다.</p><div class="acts"><button class="btn primary" data-a="cancelRound" style="background:var(--alert)">참가 취소</button><button class="btn secondary" data-a="closeSheet">유지</button></div>`,
+  corner:(i)=>{const cr=[['T1','진입 속도 유지',+0.05,'코너 진입 속도는 좋았지만 탈출에서 0.05초를 잃었어요. 스로틀을 조금 더 일찍 여세요.'],['T3','브레이킹 5m 늦춤',-0.31,'브레이킹 포인트를 5m 늦춰 0.31초를 줄였어요. 다음 목표는 트레일 브레이킹입니다.'],['T5','라인이 넓음',+0.12,'에이펙스를 1m 놓쳐 라인이 넓어졌어요. LV2 가이드의 에이펙스 포인트를 보세요.'],['T7','에이펙스 속도 상승',-0.28,'에이펙스 속도가 3 km/h 올라 0.28초를 줄였어요.']][+i];
+    return `<div class="overline">Corner ${cr[0]}</div><h2 style="margin-top:6px">${cr[1]}</h2><div class="metric-l" style="margin:12px 0;color:${cr[2]<0?'var(--text-accent)':'var(--alert)'}">${cr[2]<0?'−':'+'}${Math.abs(cr[2]).toFixed(2)}s</div><p class="desc">${cr[3]}</p>
+    <div class="acts"><button class="btn primary" data-a="sheetReplay">이 코너 리플레이</button><button class="btn secondary" data-a="sheetGo" data-p="E">글라스 가이드 설정</button></div>`;}
+};
+
+/* =========================================================
+   ROUTER + RENDER
+   ========================================================= */
+let stack=['A'];
+const app=document.getElementById('app');
+function render(dir){
+  const key=stack[stack.length-1];
+  const prev=app.querySelector('.scroll');const keep=dir==='same'&&prev?prev.scrollTop:0;
+  app.innerHTML=`<div class="screen ${dir==='back'?'back':''}" style="${dir==='same'?'animation:none':''}">${SCREENS[key]()}</div>`;
+  const sc=app.querySelector('.scroll');if(sc)sc.scrollTop=keep;
+  save();
+}
+const go=k=>{closeAR();stack.push(k);render();};
+const back=()=>{closeAR();if(stack.length>1){stack.pop();render('back');}};
+const refresh=()=>render('same');
+
+/* ---------- Toast ---------- */
+let tTimer;
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.className='toast '+(type==='ok'?'':type);
+  document.getElementById('toastIcon').innerHTML=ic(type==='warn'?'info':type==='off'?'x':'check',16,2.4);
+  document.getElementById('toastText').textContent=msg;
+  requestAnimationFrame(()=>t.classList.add('show'));
+  clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),2300);
+}
+/* ---------- Sheet ---------- */
+let sheetKey=null,sheetArg=null;
+function openSheet(k,arg){sheetKey=k;sheetArg=arg;const sh=document.getElementById('sheet');sh.innerHTML=`<div class="grab"></div>`+SHEETS[k](arg);sh.classList.add('show');document.getElementById('scrim').classList.add('show');}
+function refreshSheet(){if(sheetKey){const sh=document.getElementById('sheet');const st=sh.scrollTop;sh.innerHTML=`<div class="grab"></div>`+SHEETS[sheetKey](sheetArg);sh.scrollTop=st;}}
+function closeSheet(){sheetKey=null;document.getElementById('sheet').classList.remove('show');document.getElementById('scrim').classList.remove('show');}
+
+/* ---------- AR layer sync + landscape preview ---------- */
+function syncLayers(){AR_ORDER.forEach(k=>document.querySelectorAll('.layer-'+k).forEach(el=>el.classList.toggle('hide',!layerVisible(k))));
+  document.querySelectorAll('.bigchips [data-a="cluster"]').forEach(c=>c.classList.toggle('on',c.dataset.p===S.cluster));}
+function openAR(){
+  const m=document.getElementById('armodal'),dev=document.getElementById('device');
+  const W=Math.min(dev.clientHeight-120,(dev.clientWidth-110)*16/9);
+  const zs=Object.entries(ZONES[S.cfgMode]).map(([id,[,t]])=>`<button class="${S.zones[id]?'on':''}" data-a="zone" data-p="${id}">${t.split(' · ')[0]==='G'?'G·H':t.split(' · ')[0]} ${t.split(' · ').slice(-1)[0]}</button>`).join('');
+  m.innerHTML=`<button class="close" data-a="arClose">${ic('x',20)}</button><div class="rot" style="width:${W}px"><div style="width:345px;zoom:${(W/345).toFixed(3)}">${arView(S.cfgMode,(id,l,x,y,w,h)=>`<span class="zone ${S.zones[id]?'on':'offz'}" data-p="${id}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${l}</span>`,true)}</div>
+    <div class="bigchips"><button class="fixed">A 속도 · 기어</button><button class="fixed">E 안전 알림</button>${zs}<button class="${S.cluster==='shift'?'on':''}" data-a="cluster" data-p="shift">시프트 라이트</button><button class="${S.cluster==='dial'?'on':''}" data-a="cluster" data-p="dial">3원형</button></div></div>`;
+  m.classList.add('show');
+}
+function closeAR(){const m=document.getElementById('armodal');m.classList.remove('show');m.innerHTML='';}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+let busy=false, replayTimer=null;
+const A={
+  go:p=>go(p), back:()=>back(),
+  tab:p=>{stack=[p];render();},
+  reset:p=>{stack=p.split(',');render('back');},
+  sheet:p=>{const [k,arg]=p.split('|');openSheet(k,arg);},
+  sheetGo:p=>{closeSheet();go(p);},
+  closeSheet:()=>closeSheet(),
+  toastMsg:p=>{const [m,t]=p.split('|');toast(m,t||'ok');},
+
+  /* remote commands on home */
+  remote:p=>{
+    if(busy)return;busy=true;
+    const el=document.getElementById('qa-'+p);if(el)el.classList.add('busy');
+    const msgs={lock:['차량이 잠겼습니다','ok'],unlock:['차량 잠금이 해제되었습니다','ok'],light:['라이트를 깜빡였습니다','ok'],horn:['경적을 울렸습니다','ok']};
+    if(sheetKey)closeSheet();
+    setTimeout(()=>{busy=false;
+      if(p==='lock'){if(S.locked){toast('차량이 이미 잠겨 있습니다','warn');refresh();return;}S.locked=true;}
+      if(p==='unlock'){if(!S.locked){toast('차량 잠금이 이미 해제되어 있습니다','warn');refresh();return;}S.locked=false;}
+      if(p==='climate'){S.climate=!S.climate;refresh();toast(S.climate?`공조가 켜졌습니다 · ${S.climateTemp}°C`:'공조가 꺼졌습니다',S.climate?'ok':'off');return;}
+      refresh();toast(...msgs[p]);
+    },850);
+  },
+
+  /* generic toggle: key|label */
+  toggle:p=>{const [k,l]=p.split('|');S[k]=!S[k];
+    if(sheetKey)refreshSheet();refresh();
+    toast(`${l}${josa(l,'이','가')} ${S[k]?'활성화':'비활성화'}되었습니다`,S[k]?'ok':'off');},
+  /* generic pick: key|value|message */
+  pick:p=>{const [k,v,m]=p.split('|');S[k]=v;refreshSheet();refresh();if(m){toast(m);setTimeout(closeSheet,350);}},
+
+  notif:p=>{const [k,d]=p.split('|');S.read[k]=true;if(d)go(d);else{refresh();toast('읽음으로 표시했습니다');}},
+  readAll:()=>{['n1','n2','n3','n4','n5'].forEach(k=>S.read[k]=true);refresh();toast('모든 알림을 읽음으로 표시했습니다');},
+
+  /* climate sheet */
+  temp:p=>{S.climateTemp=Math.min(28,Math.max(16,S.climateTemp+ +p));refreshSheet();},
+  climateSave:()=>{closeSheet();refresh();toast(S.climateTimer?`냉난방 타이머 ${S.climateTime} · ${S.climateTemp}°C로 저장되었습니다`:'냉난방 타이머가 꺼져 있습니다',S.climateTimer?'ok':'off');},
+
+  /* glasses */
+  software:()=>{toast('업데이트 확인 중…','warn');setTimeout(()=>toast('최신 버전입니다 · XREAL M 2.4.1'),1200);},
+  helmet:()=>{S.helmet=!S.helmet;refreshSheet();refresh();toast(S.helmet?'헬멧이 연결되었습니다':'헬멧 연결이 해제되었습니다',S.helmet?'ok':'off');},
+  lost:()=>{S.lost=!S.lost;closeSheet();refresh();toast(S.lost?'분실 모드가 켜졌습니다 · 글라스가 잠겼습니다':'분실 모드가 꺼졌습니다',S.lost?'warn':'ok');},
+  irisStart:()=>{const b=document.getElementById('irisBtn');b.disabled=true;let v=0;const msg=document.getElementById('irisMsg');const steps=['정면의 점을 바라보세요','왼쪽을 천천히 보세요','오른쪽을 천천히 보세요','다시 정면을 보세요'];
+    const t=setInterval(()=>{v+=5;document.getElementById('irisProg').style.width=v+'%';msg.textContent=steps[Math.min(3,Math.floor(v/25))];
+      if(v>=100){clearInterval(t);S.irisDate='2026. 11. 22.';closeSheet();refresh();toast('홍채가 다시 등록되었습니다');}},180);},
+  asSubmit:()=>{closeSheet();toast(`AS가 접수되었습니다 · 서비스 센터 ${S.center}에서 연락드릴게요`);S.asType=null;},
+  lensStep:p=>{const [k,d]=p.split('|');S[k]=Math.round((S[k]+ +d)*100)/100;S[k]=Math.max(-10,Math.min(6,S[k]));refreshSheet();},
+  lensSave:()=>{closeSheet();refresh();toast(`새 도수를 적용했습니다 · 좌 ${fmtLens(S.lensL)} · 우 ${fmtLens(S.lensR)}`);},
+  lensGo:p=>{if(p==='1')S.withService=true;go('H');},
+  center:p=>{S.center=p;refresh();toast(`BMW 서비스 센터 ${p}${josa(p,'을','를')} 선택했습니다`);},
+  lensDay:p=>{S.lensDay=+p;refresh();},
+  lensTime:p=>{S.lensTime=p;refresh();},
+  lensSubmit:()=>{S.lensReq=`${S.center} · 11.${23+S.lensDay} ${S.lensTime}`;go('I');toast('도수 변경이 신청되었습니다');},
+  cancelLens:()=>{S.lensReq=null;stack=['A','D','G'];render('back');toast('도수 변경 신청이 취소되었습니다','off');},
+
+  /* screen config */
+  cfgMode:p=>{S.cfgMode=p;refresh();toast(`${p} 모드 화면을 편집합니다`);},
+  cluster:p=>{if(S.cluster===p)return;S.cluster=p;save();syncLayers();
+    const g=document.getElementById('optgrid');
+    if(g){const tmp=document.createElement('div');tmp.innerHTML=SCREENS.E();const ng=tmp.querySelector('#optgrid');if(ng)g.innerHTML=ng.innerHTML;}
+    toast(`핸들 위 표시를 ${p==='shift'?'시프트 라이트로':'3원형 클러스터로'} 바꿨어요`);},
+  zone:p=>{S.zones[p]=!S.zones[p];save();syncLayers();
+    const on=S.zones[p];const l=ZONES[S.cfgMode][p][1];
+    document.querySelectorAll(`#zr-${p} .toggle`).forEach(t=>t.classList.toggle('on',on));
+    document.querySelectorAll(`.zone[data-p="${p}"]`).forEach(z=>{z.classList.toggle('on',on);z.classList.toggle('offz',!on);});
+    document.querySelectorAll(`.bigchips [data-p="${p}"]`).forEach(c=>c.classList.toggle('on',on));
+    const r=document.getElementById('zr-'+p);if(r){r.classList.remove('flash');void r.offsetWidth;r.classList.add('flash');}
+    toast(`${l}${josa(l,'이','가')} ${on?'활성화':'비활성화'}되었습니다`,on?'ok':'off');},
+  arFull:()=>openAR(),
+  arClose:()=>closeAR(),
+  lockedZone:p=>toast(`${p}${josa(p,'은','는')} 안전을 위해 항상 표시됩니다`,'warn'),
+
+  /* coach / ghost */
+  coach:p=>{S.coach=p;refresh();toast(`코치 레벨이 ${COACH[p][1]}${josa(COACH[p][1],'으로','로')} 설정되었습니다`);},
+  ghost:p=>{const i=S.ghosts.indexOf(p);const n=GHOSTS[p][1];
+    if(i>=0){S.ghosts.splice(i,1);refresh();toast(`${n} 고스트를 껐습니다`,'off');return;}
+    if(S.ghosts.length>=2){toast('고스트는 최대 2대까지 선택할 수 있어요','warn');return;}
+    S.ghosts.push(p);refresh();toast(`${n} 고스트를 켰습니다`);},
+
+  /* simulator booking */
+  simDay:p=>{S.simDay=+p;refresh();},
+  simSlot:p=>{S.simSlot=p;refresh();},
+  simSubmit:()=>{S.simBooking={day:S.simDay,slot:S.simSlot,ghost:S.simGhost,coach:S.simCoach};if(S.ticket>0)S.ticket=0;stack=['C','L'];render();toast('시뮬레이터 예약이 확정되었습니다');},
+  cancelSim:()=>{S.simBooking=null;S.ticket=1;closeSheet();stack=['C'];render('back');toast('예약이 취소되었습니다 · 초대권을 돌려드렸어요','off');},
+
+  /* season round */
+  joinRound:()=>{S.roundJoined=true;go('N');toast('라운드 3 참가가 확정되었습니다');},
+  cancelRound:()=>{S.roundJoined=false;closeSheet();refresh();toast('라운드 3 참가가 취소되었습니다','off');},
+  standTab:p=>{S.standTab=p;refresh();},
+
+  /* replay */
+  replay:()=>{const btn=document.getElementById('playbtn');if(replayTimer){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);return;}
+    const path=document.getElementById('trk');if(!path)return;const L=path.getTotalLength();let t=0;btn.innerHTML=ic('pause',22);btn.style.opacity='.6';toast('LAP 6 리플레이 · 흰색 이번 랩 / 파란색 내 베스트');
+    replayTimer=setInterval(()=>{t+=0.006;if(t>=1){clearInterval(replayTimer);replayTimer=null;btn.innerHTML=ic('play',24);btn.style.opacity='1';t=1;}
+      const p1=path.getPointAtLength(L*t),p2=path.getPointAtLength(L*Math.max(0,t-0.025));const c1=document.getElementById('car1'),c2=document.getElementById('car2');
+      if(!c1)return;c1.setAttribute('cx',p1.x);c1.setAttribute('cy',p1.y);c2.setAttribute('cx',p2.x);c2.setAttribute('cy',p2.y);document.getElementById('replayProg').style.width=(t*100)+'%';},30);},
+  sheetReplay:()=>{closeSheet();setTimeout(()=>A.replay(),300);}
+};
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-a]');if(!el)return;
+  const a=el.dataset.a,p=el.dataset.p;
+  if(A[a]){e.preventDefault();A[a](p,el);}
+});
+/* reset demo: long-press status bar time area → double click */
+document.querySelector('.statusbar').style.pointerEvents='auto';
+document.querySelector('.statusbar .time').addEventListener('dblclick',()=>{try{localStorage.removeItem('xrealM');}catch(e){}S=structuredClone(DEFAULT);stack=['A'];render();toast('데모 상태를 초기화했습니다');});
+render();
+</script>
+</body>
+</html>
